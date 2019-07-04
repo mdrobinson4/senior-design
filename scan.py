@@ -97,16 +97,14 @@ for i in range(1, pointCount):
   
   phi[i] = math.degrees(math.atan(y[i] / x[i]))
   
+  # needed since we can only rotate 180 degrees
+  # still not fully confident about this part
   if x[i]<0 and y[i]<0:
     phi[i] = 180 - phi[i]
-    #rec[i] = 1
   elif x[i]>=0 and y[i]<0:
     phi[i] = - phi[i]
-    #rec[i] = 1
-    #rec[i] = 0
   elif x[i]<0 and y[i]>=0:
     phi[i] =  180 + phi[i]
-    #rec[i] = 0
       
   
   prevVals = np.array([x[i - 1], y[i - 1], z[i - 1]])
