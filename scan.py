@@ -9,6 +9,23 @@ from numpy import*
 from numpy.linalg import norm
 from socket import*
 
+def translate(value, leftMin, leftMax, rightMin, rightMax):
+    # Figure out how 'wide' each range is
+    leftSpan = leftMax - leftMin
+    rightSpan = rightMax - rightMin
+    # Convert the left range into a 0-1 range (float)
+    valueScaled = float(value - leftMin) / float(leftSpan)
+    # Convert the 0-1 range into a value in the right range.
+    return rightMin + (valueScaled * rightSpan)
+  
+def scan():
+  i = 0
+  while i < pointCount:
+    servoY.ChangeDutyCycle(translate(theta[i], 0, 180, 0, 12.5))
+    servoZ.ChangeDutyCycle(translate(phi[i], 0, 180, 0, 12.5))
+    time.sleep(step[i])
+    i += 1
+
 GPIO.setwarnings(False)
 
 servoZPin = 3
@@ -63,9 +80,18 @@ for i in range(1, pointCount):
   r = (x[i]**2 + y[i]**2 + z[i]**2)**(1/2)
   
   # calculate theta the z-axis angle
-  theta[i] = math.arcos(z[i] / r)
+  theta[i] = math.degrees(math.arcos(z[i] / r))
   # calculate phi the x-axis angle
-  phi[i] = math.arsin(y[i] / x[i])
+  phi[i] = math.degrees(math.arsin(y[i] / x[i]))
+  
+  prevVals = np.array([x[i - 1], y[i - 1], z[i - 1]])
+  currVals = np.array([x[i], y[i], z[i]])
+  
+  step[i - 1] = math.arcos(np.dot(prevVals, currVals)) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals))
+  step[i - 1] = math.degrees(step[i - 1] ) / beta
+scan()
+  
+  
   
   
   
