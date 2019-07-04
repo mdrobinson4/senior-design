@@ -11,19 +11,24 @@ from socket import*
 
 GPIO.setwarnings(False)
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(18, GPIO.OUT)
-GPIO.setup(23, GPIO.OUT)
+servoZPin = 3
+servoYPin = 2
 
-p2 = GPIO.PWM(18, 50)
-p = GPIO.PWM(23, 50)
+GPIO.setmode(GPIO.BCM)
+
+GPIO.setup(servoYPin, GPIO.OUT)
+GPIO.setup(servoZPin, GPIO.OUT)
+
+p2 = GPIO.PWM(servoZPin, 50)
+p = GPIO.PWM(servoYPin, 50)
 
 sf = 1
 
 theta = 24
-dmax = 3
+dmax = 1
 sqrtof2 = 2**(1/2.0)
 n = 180.0/(sqrtof2*theta)
+print(n)
 nop = 1000
 omega = 180
 dr = .005
@@ -77,9 +82,15 @@ for i in range(1,nop):
     c = array([x2, y2, z2])
     abNorm = (b-a)/norm(b-a)
     bcNorm = (b-c)/norm(b-c)
+    
+    
     res = abNorm[0]*bcNorm[0] + abNorm[1]*bcNorm[1] + abNorm[2]*bcNorm[2]
     ang[i] = arccos(res)*180.0/pi
     step[i-1] = ang[i]/omega
+    
+    step1 = np.zeros(nop)
+    
+    step1[i-1] = ((arccos(np.dot(a, c) / (np.linalg.norm(a) * np.linalg.norm(c))) ) * (180 / np.pi)) / omega
     
 counter = 0
 counter2 = 0
@@ -104,16 +115,13 @@ def scanxyz(threadName, counter, counter2, flag, flag2):
             p.ChangeDutyCycle(angle_thetaa)
             angle_phia = float(phia[i])/18+2.5
             p2.ChangeDutyCycle(angle_phia)
-            print(angle_thetaa, angle_phia)
+            #print(angle_thetaa, angle_phia)
             time.sleep(step[i])
             i = i + 1
             if i == nop:
                 Hello = 0
                 Master = 0
                 print ("Reached end of scan path. No receiver found. Writing \"100\" to file...")
-                fh = open("SSSanity_Omega"+(str(omega))+"_Transmitter10.csv","a")
-                fh.write("100")
-                fh.write("\n")
-                fh.close()
+
 
 scanxyz("", counter, counter2, flag, flag2)
