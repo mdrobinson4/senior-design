@@ -8,6 +8,13 @@ import sys
 from numpy import*
 from numpy.linalg import norm
 from socket import*
+import serial
+import threading
+
+GPIO.setwarnings(False)
+
+GPIO.setmode(GPIO.BCM)
+
 
 def translate(value, leftMin, leftMax, rightMin, rightMax):
     # Figure out how 'wide' each range is
@@ -27,18 +34,37 @@ def scan():
     time.sleep(step[i])
     i += 1
 
-GPIO.setwarnings(False)
+def comm():
+    
+    
+
+GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
 
 servoZPin = 3
 servoYPin = 2
-
-GPIO.setmode(GPIO.BCM)
 
 GPIO.setup(servoYPin, GPIO.OUT)
 GPIO.setup(servoZPin, GPIO.OUT)
 
 servoZ = GPIO.PWM(servoZPin, 50)
 servoY = GPIO.PWM(servoYPin, 50)
+
+ser = serial.Serial(
+    port='/dev/serial0',
+    baudrate = 115200,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS,
+    timeout=1
+)
+
+resetPin = 18
+
+GPIO.output(resetPin, GPIO.HIGH)
+
+# ser.write(b'%d' % (i))
+# if (ser.in_waiting > 0):
+# x = ser.read(1)
 
 servoZ.start(7.5)
 servoY.start(7.5)
@@ -112,7 +138,14 @@ for i in range(1, pointCount):
   
   step[i - 1] = arccos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
   step[i - 1] = math.degrees(step[i - 1] ) / omega
-scan()
+threads = []
+
+servoPath = threading.Thread(target=scan)
+comm = threading.Thread(target=sendACKS)
+threads.append(servoPath)
+threads.append(comm)
+servoPath.start()
+comm.start()
   
   
   
