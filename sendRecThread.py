@@ -61,6 +61,7 @@ def send():
 def receive():
   global synRec
   global ackRec
+  global aligned
 
   while not aligned:
     data = ser.read()
