@@ -43,22 +43,20 @@ class thread(threading.Thread):
 
 def send():
     global aligned
-
-    print(synRec, ackRec, aligned)
       
     # have not received syn
     if synRec == 0:
         # send syn
-        ser.write(struct.pack('l', syn))
+        ser.write(struct.pack('>ll', syn, 0))
         # received a syn but not ack
     elif synRec != 0 and ackRec == 0:
         # send syn and ackRec + 1
-        ser.write(struct.pack('ll', syn, synRec + 1))
+        ser.write(struct.pack('>ll', syn, synRec + 1))
     # received syn and ack
     elif synRec != 0 and ackRec == syn + 1:
         # send synRec + 1
         print("JOIN")
-        ser.write(struct.pack('l', synRec + 1))
+        ser.write(struct.pack('>ll', synRec + 1, 0))
         aligned = True
         sendThread.join()
         receiveThread.join()
@@ -72,13 +70,15 @@ def send():
 def receive():
     global synRec
     global ackRec
-
-    data = ser.read()
-    try:
-        data = struct.unpack(data)
-    except:
-        data = 0
-        return
+    
+    if (ser.in_waiting > 0):
+        try:
+            data = ser.read()
+            data = struct.unpack('>ll',data)
+            print(data)
+        except:
+            data = 0
+            return
     try:
         synRec = data[0]
     except:
@@ -104,5 +104,6 @@ if __name__ == "__main__":
     sendThread.start()
     receiveThread.start()
     
+
 
 
