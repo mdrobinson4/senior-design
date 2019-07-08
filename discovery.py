@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import RPi.GPIO as GPIO
 import threading
 import time
@@ -16,6 +14,21 @@ import threading
 GPIO.setwarnings(False)
 
 GPIO.setmode(GPIO.BCM)
+
+def __init__(self, name):
+    serlf._stopevent = threading.Event()
+    self._sleepperiod = 1.0
+    
+    threading.Thread.__init__(self, name=name)
+    
+    def run(self):
+        # send acks
+        while not self._stopevent.isSet():
+            # send acks
+            self._stopevent.wait(self.sleepperiod)
+    
+    def join(self, timeout=None):
+        self._stope
 
 
 def translate(value, leftMin, leftMax, rightMin, rightMax):
@@ -148,13 +161,3 @@ threads.append(servoPath)
 threads.append(comm)
 servoPath.start()
 comm.start()
-  
-  
-  
-  
-  
-
-
-
-
->>>>>>> 69e932ba634eb238435bb1398250f00de76db3d0
