@@ -1,7 +1,6 @@
 import threading
 import time
 import RPi.GPIO as GPIO
-import threading
 import serial
 import struct
 
@@ -26,60 +25,68 @@ class thread(threading.Thread):
         threading.Thread.__init__(self, name=name)
 
     def run(self):
-        count = 0
         while not self._stopevent.isSet():
-            print("loop %d" % (count))
-            self.target()
-            # self._stopevent.wait(self._sleepperiod)
+            try:
+                self.target()
+                #self._stopevent.wait(self._sleepperiod)
+            except KeyboardInterrupt:
+                sendThread.join()
+                receiveThread.join()
 
         print("%s ends" % (self.getName()))
 
     def join(self, timeout=None):
         # Stop the thread
         self._stopevent.set()
-        threading.Thread.join(self, timeout)
+        threading.Thread.join(self)
 
 
 def send():
-  global synRec
-  global ackRec
-  
-  # have not received syn
-  if synRec == 0:
-    # send syn
-    ser.write(struct.pack('l', syn))
-  # received a syn but not ack
-  elif synRec != 0 and ackRec == 0:
-    # send syn and ackRec + 1
-    ser.write(struct.pack('ll', syn, synRec + 1))
-  # received syn and ack
-  elif synRec != 0 and ackRec == syn + 1:
-    # send synRec + 1
-    ser.write(struct.pack('l', synRec + 1))
-    aligned = True
-    send.join()
-    receive.join()
-  # received ack
-  elif synRec == syn + 1:
-    aligned = True
-    send.join()
-    receive.join()
+    global aligned
+
+    print(synRec, ackRec, aligned)
+      
+    # have not received syn
+    if synRec == 0:
+        # send syn
+        ser.write(struct.pack('l', syn))
+        # received a syn but not ack
+    elif synRec != 0 and ackRec == 0:
+        # send syn and ackRec + 1
+        ser.write(struct.pack('ll', syn, synRec + 1))
+    # received syn and ack
+    elif synRec != 0 and ackRec == syn + 1:
+        # send synRec + 1
+        print("JOIN")
+        ser.write(struct.pack('l', synRec + 1))
+        aligned = True
+        sendThread.join()
+        receiveThread.join()
+    # received ack
+    elif synRec == syn + 1:
+        print("JOIN")
+        aligned = True
+        sendThread.join()
+        receiveThread.join()
 
 def receive():
-  global synRec
-  global ackRec
-  global aligned
+    global synRec
+    global ackRec
 
-  data = ser.read()
-  data = struct.unpack(data)
-  try:
-    synRec = data[0]
-  except:
-    synRec = 0
-  try:
-    ackRec = data[1]
-  except:
-    ackRec = 0
+    data = ser.read()
+    try:
+        data = struct.unpack(data)
+    except:
+        data = 0
+        return
+    try:
+        synRec = data[0]
+    except:
+        synRec = 0
+    try:
+        ackRec = data[1]
+    except:
+        ackRec = 0
     
 if __name__ == "__main__":
     resetPin = 18
@@ -87,12 +94,15 @@ if __name__ == "__main__":
     ack = synRec = ackRec = aligned = 0
     GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
     GPIO.output(resetPin, GPIO.HIGH)
-    
+        
     # create send and receive thread classes and pass corresponding
     # functions to each class
-    
+        
     sendThread = thread("send", send)
     receiveThread = thread("receive", receive)
-    
+        
     sendThread.start()
     receiveThread.start()
+    
+
+

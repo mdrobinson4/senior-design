@@ -50,10 +50,10 @@ def scan():
     i += 1
 
 def comm():
-    
+    print("HERE")   
     
 
-GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 
 servoZPin = 3
 servoYPin = 2
