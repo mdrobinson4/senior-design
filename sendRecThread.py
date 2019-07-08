@@ -1,5 +1,9 @@
 import threading
 import time
+import RPi.GPIO as GPIO
+import threading
+import serial
+import struct
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -22,6 +26,7 @@ class thread(threading.Thread):
         threading.Thread.__init__(self, name=name)
 
     def run(self):
+        count = 0
         while not self._stopevent.isSet():
             print("loop %d" % (count))
             self.target()
@@ -78,9 +83,10 @@ def receive():
     
 if __name__ == "__main__":
     resetPin = 18
-    GPIO.output(resetPin, GPIO.HIGH)
     syn = 1
     ack = synRec = ackRec = aligned = 0
+    GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
+    GPIO.output(resetPin, GPIO.HIGH)
     
     # create send and receive thread classes and pass corresponding
     # functions to each class

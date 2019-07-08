@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import RPi.GPIO as GPIO
 import threading
 import time
@@ -148,13 +146,3 @@ threads.append(servoPath)
 threads.append(comm)
 servoPath.start()
 comm.start()
-  
-  
-  
-  
-  
-
-
-
-
->>>>>>> 69e932ba634eb238435bb1398250f00de76db3d0
