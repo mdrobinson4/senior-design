@@ -1,6 +1,18 @@
 import threading
 import time
 
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+
+ser = serial.Serial(
+    port='/dev/serial0',
+    baudrate = 115200,
+    parity=serial.PARITY_NONE,
+    stopbits=serial.STOPBITS_ONE,
+    bytesize=serial.EIGHTBITS,
+    timeout=1
+)
+
 
 class thread(threading.Thread):
     def __init__(self, name, target):
@@ -22,27 +34,27 @@ class thread(threading.Thread):
         self._stopevent.set()
         threading.Thread.join(self, timeout)
 
-if __name__ == "__main__":
-    send = thread("send")
-    receive = thread("receive")
-    
-    send.start()
-    receive.start()
-
 
 def send():
   global synRec
   global ackRec
   
+  # have not received syn
   if synRec == 0:
     # send syn
     ser.write(struct.pack('l', syn))
+  # received a syn but not ack
   elif synRec != 0 and ackRec == 0:
     # send syn and ackRec + 1
-    ser.write(struct.pack('ll', syn, ackRec + 1))
+    ser.write(struct.pack('ll', syn, synRec + 1))
+  # received syn and ack
   elif synRec != 0 and ackRec == syn + 1:
-    # send synRec
-    ser.write(struct.pack('l', synRec))
+    # send synRec + 1
+    ser.write(struct.pack('l', synRec + 1))
+    aligned = True
+    send.join()
+    receive.join()
+  # received ack
   elif synRec == syn + 1:
     aligned = True
     send.join()
@@ -63,3 +75,18 @@ def receive():
     ackRec = data[1]
   except:
     ackRec = 0
+    
+if __name__ == "__main__":
+    resetPin = 18
+    GPIO.output(resetPin, GPIO.HIGH)
+    syn = 1
+    ack = synRec = ackRec = aligned = 0
+    
+    # create send and receive thread classes and pass corresponding
+    # functions to each class
+    
+    sendThread = thread("send", send)
+    receiveThread = thread("receive", receive)
+    
+    sendThread.start()
+    receiveThread.start()
