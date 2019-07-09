@@ -16,90 +16,73 @@ ser = serial.Serial(
     timeout=1
 )
 
-
-class thread(threading.Thread):
-    def __init__(self, name, target):
-        self._stopevent = threading.Event()
-        self._sleepperiod = 0.0
-        self.target = target
-        threading.Thread.__init__(self, name=name)
-
-    def run(self):
-        while not self._stopevent.isSet():
-            try:
-                self.target()
-                #self._stopevent.wait(self._sleepperiod)
-            except KeyboardInterrupt:
-                sendThread.join()
-                receiveThread.join()
-
-        print("%s ends" % (self.getName()))
-
-    def join(self, timeout=None):
-        # Stop the thread
-        self._stopevent.set()
-        threading.Thread.join(self)
-
-
-def send():
-    global aligned
-      
-    # have not received syn
-    if synRec == 0:
-        # send syn
-        ser.write(struct.pack('>ll', syn, 0))
-        # received a syn but not ack
-    elif synRec != 0 and ackRec == 0:
-        # send syn and ackRec + 1
-        ser.write(struct.pack('>ll', syn, synRec + 1))
-    # received syn and ack
-    elif synRec != 0 and ackRec == syn + 1:
-        # send synRec + 1
-        print("JOIN")
-        ser.write(struct.pack('>ll', synRec + 1, 0))
-        aligned = True
-        sendThread.join()
-        receiveThread.join()
-    # received ack
-    elif synRec == syn + 1:
-        print("JOIN")
-        aligned = True
-        sendThread.join()
-        receiveThread.join()
-
-def receive():
+def listenForSyn():
     global synRec
     global ackRec
-    
-    if (ser.in_waiting > 0):
-        try:
-            data = ser.read()
-            data = struct.unpack('>ll',data)
-            print(data)
-        except:
-            data = 0
-            return
-    try:
-        synRec = data[0]
-    except:
-        synRec = 0
-    try:
-        ackRec = data[1]
-    except:
-        ackRec = 0
-    
+
+    while True:
+        if (ser.in_waiting > 0):
+            try:
+                data = struct.unpack('>ll', ser.read())
+                synRec = data[0]
+                ackRec = data[1]
+                if synRec != 0 and ackRec == 0:
+                    ser.write(struct.pack('>ll', syn, synRec + 1))
+                    listenForSyn.join()
+                    aligned = True
+
+            except:
+                print('error')
+
+def listenForAck():
+    global ackRec
+    global synRec
+
+    while True:
+        if (ser.in_waiting > 0):
+            try:
+                data = struct.unpack('>ll', ser.read())
+                synRec = data[0]
+                ackRec = data[1]
+                if synRec != 0 and ackRec == syn + 1:
+                    aligned = True
+                    listenForAckThread.join()
+            except:
+                print('error')
+
+def main():
+    global synRec
+    global ackRec
+    global aligned
+
+    listenForAckThread = threading.thread(target=listenForAck, daemon=True)
+    listenForSynThread = threading.thread(target=listenForSyn, daemon=True)
+
+    while not aligned:
+        ser.write(struct.pack('>ll', syn, 0))
+
+        # listen for ack back
+        listenForAckThread.start()
+        time.sleep(ackWaitTime)
+        listenForAckThread.join()
+
+        # listen for syn
+        listenForSynThread.start()
+        time.sleep(synWaitTime)
+        listenForSynThread.join()
+
+
+
+
+
 if __name__ == "__main__":
     resetPin = 18
     syn = 1
-    ack = synRec = ackRec = aligned = 0
+    ackWaitTime = 2
+    synRec = ackRec = aligned = 0
     GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
     GPIO.output(resetPin, GPIO.HIGH)
-        
+
     # create send and receive thread classes and pass corresponding
     # functions to each class
-        
-    sendThread = thread("send", send)
-    receiveThread = thread("receive", receive)
-        
-    sendThread.start()
-receiveThread.start()
+    main()
