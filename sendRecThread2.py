@@ -35,7 +35,7 @@ def listenForSyn():
                 aligned = True
 
         except:
-            print('error: {}', format(x))
+            print('error: ')
 
 def listenForAck():
     global ackRec
@@ -54,7 +54,7 @@ def listenForAck():
             if synRec != 0 and ackRec == syn + 1:
                 aligned = True
         except:
-            print('error: {}'.format(x))
+            print('error: ')
                 
 
 def main():
