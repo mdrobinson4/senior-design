@@ -33,8 +33,8 @@ def listenForSyn():
             ser.write(struct.pack('>ll', syn, synRec + 1))
             aligned = True
 
-        except:
-            print('error: ')
+    except:
+        print('error: ')
 
 def listenForAck():
     global ackRec
@@ -51,8 +51,8 @@ def listenForAck():
         ackRec = data[1]
         if synRec != 0 and ackRec == syn + 1:
             aligned = True
-        except:
-            print('error: ')
+    except:
+        print('error: ')
                 
 
 def main():
