@@ -28,12 +28,16 @@ def listenForSyn():
     global synRec
     global ackRec
     count = 0
+    data = []
 
     #print("listening for syn... {}".format(count))
     count += 1
     try:
-        x = (ser.read()).decode()
-        print("received syn: {}".format(x))
+        while ser.in_waiting() > 0:
+            x = (ser.read()).decode()
+            if x != ',':
+                data.append(x)
+        print("received syn: {}".format(data))
         synRec = data[0]
         ackRec = data[1]
         if synRec != 0 and ackRec == 0:
@@ -47,12 +51,16 @@ def listenForAck():
     global ackRec
     global synRec
     count = 0
+    data = []
 
     #print("Listening for ack.. {}".format(count))
     count += 1
     try:
-        x = (ser.read()).decode()
-        print("received ack and syn: {}".format(x))
+        while ser.in_waiting() > 0:
+            x = (ser.read()).decode()
+            if x != ',':
+                data.append(x)
+        print("received ack and syn: {}".format(data))
         synRec = data[0]
         ackRec = data[1]
         if synRec != 0 and ackRec == syn + 1:
@@ -71,11 +79,13 @@ def main():
         # sending syn
         str = ("{},{}\r\n".format(syn, 0)).encode()
         ser.write(str)
+        ser.reset_input_buffer()
         tEnd = time.time() + ackWaitTime
         while time.time() < tEnd:
             # listen for ack back
             listenForAck()
         
+        ser.reset_input_buffer()
         tEnd = time.time() + synWaitTime
         while time.time() < tEnd:
             # listen for syn
