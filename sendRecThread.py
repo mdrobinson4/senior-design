@@ -4,6 +4,10 @@ import RPi.GPIO as GPIO
 import serial
 import struct
 
+# for x time send, next x time receive
+# in send syn and wait y time for ack send syn againg if time expires
+# in rec: keep listening for syn if gets it then send ack
+
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
@@ -25,9 +29,11 @@ class thread(threading.Thread):
         threading.Thread.__init__(self, name=name)
 
     def run(self):
+        count = 0
         while not self._stopevent.isSet():
+            count += 1
             try:
-                self.target()
+                self.target(count)
                 #self._stopevent.wait(self._sleepperiod)
             except KeyboardInterrupt:
                 sendThread.join()
@@ -41,7 +47,8 @@ class thread(threading.Thread):
         threading.Thread.join(self)
 
 
-def send():
+def send(count):
+    print("sending {}".format(count))
     global aligned
       
     # have not received syn
@@ -55,7 +62,6 @@ def send():
     # received syn and ack
     elif synRec != 0 and ackRec == syn + 1:
         # send synRec + 1
-        print("JOIN")
         ser.write(struct.pack('>ll', synRec + 1, 0))
         aligned = True
         sendThread.join()
@@ -67,7 +73,8 @@ def send():
         sendThread.join()
         receiveThread.join()
 
-def receive():
+def receive(count):
+    print("receive {}".format(count))
     global synRec
     global ackRec
     

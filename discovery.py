@@ -49,10 +49,6 @@ def scan():
     time.sleep(step[i])
     i += 1
 
-def comm():
-    print("HERE")   
-    
-
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 
 servoZPin = 3
@@ -118,7 +114,6 @@ convWidth = math.radians(beta) * (2**(1/2))
 
 # number of rotations
 n = np.pi / convWidth
-print(n)
 
 for i in range(1, pointCount):
   # calculate the new x, y, and z values
@@ -153,11 +148,4 @@ for i in range(1, pointCount):
   
   step[i - 1] = arccos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
   step[i - 1] = math.degrees(step[i - 1] ) / omega
-threads = []
-
-servoPath = threading.Thread(target=scan)
-comm = threading.Thread(target=sendACKS)
-threads.append(servoPath)
-threads.append(comm)
-servoPath.start()
-comm.start()
+scan()
