@@ -25,7 +25,8 @@ def listenForSyn():
     count += 1
     if (ser.in_waiting > 0):
         try:
-            data = struct.unpack('>ll', ser.read())
+            x = ser.read(2)
+            data = struct.unpack('>ll', x)
             print("received syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
@@ -34,7 +35,7 @@ def listenForSyn():
                 aligned = True
 
         except:
-            print('error')
+            print('error: {}', format(x))
 
 def listenForAck():
     global ackRec
@@ -45,14 +46,15 @@ def listenForAck():
     count += 1
     if (ser.in_waiting > 0):
         try:
+            x = ser.read(2) 
+            data = struct.unpack('>ll', x)
             print("received ack and syn: {}".format(data))
-            data = struct.unpack('>ll', ser.read())
             synRec = data[0]
             ackRec = data[1]
             if synRec != 0 and ackRec == syn + 1:
                 aligned = True
         except:
-            print('error')
+            print('error: {}'.format(x))
                 
 
 def main():
