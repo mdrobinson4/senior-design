@@ -24,13 +24,12 @@ def listenForSyn():
     #print("listening for syn... {}".format(count))
     count += 1
     try:
-        x = ser.read(2)
-        data = struct.unpack('>ll', x)
-        print("received syn: {}".format(data))
+        x = ser.readline()
+        print("received syn: {}".format(x))
         synRec = data[0]
         ackRec = data[1]
         if synRec != 0 and ackRec == 0:
-            ser.write(struct.pack('>ll', syn, synRec + 1))
+            ser.write("{},{}\n".format(syn, synRec + 1).encode())
             aligned = True
 
     except:
@@ -44,9 +43,8 @@ def listenForAck():
     #print("Listening for ack.. {}".format(count))
     count += 1
     try:
-        x = ser.read(2) 
-        data = struct.unpack('>ll', x)
-        print("received ack and syn: {}".format(data))
+        x = ser.readline() 
+        print("received ack and syn: {}".format(x))
         synRec = data[0]
         ackRec = data[1]
         if synRec != 0 and ackRec == syn + 1:
@@ -63,7 +61,7 @@ def main():
 
     while not aligned:
         # sending syn
-        ser.write(struct.pack('>ll', syn, 0))
+        ser.write("{},{}\n".format(syn, 0).encode())
         tEnd = time.time() + ackWaitTime
         while time.time() < tEnd:
             # listen for ack back
