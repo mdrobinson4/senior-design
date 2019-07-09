@@ -19,57 +19,60 @@ ser = serial.Serial(
 def listenForSyn():
     global synRec
     global ackRec
+    count = 0
 
-    while True:
-        if (ser.in_waiting > 0):
-            try:
-                data = struct.unpack('>ll', ser.read())
-                synRec = data[0]
-                ackRec = data[1]
-                if synRec != 0 and ackRec == 0:
-                    ser.write(struct.pack('>ll', syn, synRec + 1))
-                    listenForSyn.join()
-                    aligned = True
+    #print("listening for syn... {}".format(count))
+    count += 1
+    if (ser.in_waiting > 0):
+        try:
+            data = struct.unpack('>ll', ser.read())
+            print("received syn: {}".format(data))
+            synRec = data[0]
+            ackRec = data[1]
+            if synRec != 0 and ackRec == 0:
+                ser.write(struct.pack('>ll', syn, synRec + 1))
+                aligned = True
 
-            except:
-                print('error')
+        except:
+            print('error')
 
 def listenForAck():
     global ackRec
     global synRec
+    count = 0
 
-    while True:
-        if (ser.in_waiting > 0):
-            try:
-                data = struct.unpack('>ll', ser.read())
-                synRec = data[0]
-                ackRec = data[1]
-                if synRec != 0 and ackRec == syn + 1:
-                    aligned = True
-                    listenForAckThread.join()
-            except:
-                print('error')
+    #print("Listening for ack.. {}".format(count))
+    count += 1
+    if (ser.in_waiting > 0):
+        try:
+            print("received ack and syn: {}".format(data))
+            data = struct.unpack('>ll', ser.read())
+            synRec = data[0]
+            ackRec = data[1]
+            if synRec != 0 and ackRec == syn + 1:
+                aligned = True
+        except:
+            print('error')
+                
 
 def main():
     global synRec
     global ackRec
     global aligned
-
-    listenForAckThread = threading.thread(target=listenForAck, daemon=True)
-    listenForSynThread = threading.thread(target=listenForSyn, daemon=True)
+    global stopThread
 
     while not aligned:
+        # sending syn
         ser.write(struct.pack('>ll', syn, 0))
-
-        # listen for ack back
-        listenForAckThread.start()
-        time.sleep(ackWaitTime)
-        listenForAckThread.join()
-
-        # listen for syn
-        listenForSynThread.start()
-        time.sleep(synWaitTime)
-        listenForSynThread.join()
+        tEnd = time.time() + ackWaitTime
+        while time.time() < tEnd:
+            # listen for ack back
+            listenForAck()
+        
+        tEnd = time.time() + synWaitTime
+        while time.time() < tEnd:
+            # listen for syn
+            listenForSyn()
 
 
 
@@ -79,6 +82,8 @@ if __name__ == "__main__":
     resetPin = 18
     syn = 1
     ackWaitTime = 2
+    synWaitTime = 2
+    stopThread = False
     synRec = ackRec = aligned = 0
     GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
     GPIO.output(resetPin, GPIO.HIGH)
