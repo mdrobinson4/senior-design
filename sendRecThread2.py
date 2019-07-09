@@ -16,6 +16,14 @@ ser = serial.Serial(
     timeout=1
 )
 
+def readSerial():
+    data = ""
+    while True:
+        x = ser.read()
+        data += x
+        if x == '\r' or x == '':
+            return data
+
 def listenForSyn():
     global synRec
     global ackRec
@@ -24,12 +32,12 @@ def listenForSyn():
     #print("listening for syn... {}".format(count))
     count += 1
     try:
-        x = ser.readline()
+        x = (ser.read()).decode()
         print("received syn: {}".format(x))
         synRec = data[0]
         ackRec = data[1]
         if synRec != 0 and ackRec == 0:
-            ser.write("{},{}\n".format(syn, synRec + 1).encode())
+            ser.write(("{},{}\r\n".format(syn, synRec + 1)).encode())
             aligned = True
 
     except:
@@ -43,7 +51,7 @@ def listenForAck():
     #print("Listening for ack.. {}".format(count))
     count += 1
     try:
-        x = ser.readline() 
+        x = (ser.read()).decode()
         print("received ack and syn: {}".format(x))
         synRec = data[0]
         ackRec = data[1]
@@ -61,7 +69,8 @@ def main():
 
     while not aligned:
         # sending syn
-        ser.write("{},{}\n".format(syn, 0).encode())
+        str = ("{},{}\r\n".format(syn, 0)).encode()
+        ser.write(str)
         tEnd = time.time() + ackWaitTime
         while time.time() < tEnd:
             # listen for ack back
