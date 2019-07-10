@@ -45,6 +45,9 @@ def listenForSyn():
             if synRec != 0 and ackRec == 0:
                 ser.write(("{},{}\r\n".format(syn, synRec + 1)).encode())
                 aligned = True
+            else:
+                synRec = 0
+                ackRec = 0
         #ser.reset_input_buffer()
 
     except:
@@ -72,6 +75,8 @@ def listenForAck():
             if synRec != 0 and ackRec == syn + 1:
                 aligned = True
                 print("Aligned!")
+            else:
+                ackRec = 0
         #ser.reset_input_buffer()
     except:
         pass
@@ -89,16 +94,17 @@ def main():
         ser.write(str)
         #ser.reset_input_buffer()
         tEnd = time.time() + ackWaitTime
-        while time.time() < tEnd:
+        while time.time() < tEnd and ackRec == 0:
             # listen for ack back
             listenForAck()
         
         #ser.reset_input_buffer()
         tEnd = time.time() + synWaitTime
-        while time.time() < tEnd:
+        while time.time() < tEnd and synRec == 0:
             # listen for syn
             listenForSyn()
-
+    synRec = 0
+    ackRec = 0
 
 
 
