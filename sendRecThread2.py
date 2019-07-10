@@ -3,6 +3,7 @@ import time
 import RPi.GPIO as GPIO
 import serial
 import struct
+import discovery
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -16,31 +17,17 @@ ser = serial.Serial(
     timeout=0
 )
 
-def readSerial():
-    data = ""
-    while True:
-        x = ser.read()
-        data += x
-        if x == '\r' or x == '':
-            return data
-
 def listenForSyn():
-    #print("listending for syn")
     global synRec
     global ackRec
     global aligned
-    count = 0
     data = []
-
-    #print("listening for syn... {}".format(count))
-    count += 1
     try:
         while ser.in_waiting > 0:
             x = (ser.read()).decode()
             if x != ',' and x != '\r' and x != '\n':
                 data.append(int(x))
         if len(data) > 0:
-            #ser.reset_input_buffer()
             print("received syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
@@ -49,32 +36,24 @@ def listenForSyn():
                 ser.write(str)
                 print("just sent: {}".format(str.decode()))
                 aligned = True
+                print("Aligned!")
             else:
                 synRec = 0
                 ackRec = 0
-        #ser.reset_input_buffer()
-
     except:
         pass
 
 def listenForAck():
-    #print("listening for ack")
     global ackRec
     global synRec
     global aligned
-    count = 0
     data = []
-
-    #print("Listening for ack.. {}".format(count))
-    count += 1
-    #print("ser: {}".format(ser.in_waiting))
     try:
         while ser.in_waiting > 0:
             x = (ser.read()).decode()
             if x != ',' and x != '\r' and x != '\n' and x != ' ':
                 data.append(int(x))
         if len(data) > 0:
-            #ser.reset_input_buffer()
             print("just received ack and syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
@@ -84,41 +63,32 @@ def listenForAck():
             else:
                 ackRec = 0
                 synRec = 0
-        #ser.reset_input_buffer()
     except:
         pass
 
 def sendSyn():
-
     str = ("{},{}\r\n".format(syn, 0)).encode()
     ser.write(str)
-    print("just sent: {}".format(str))
-                
+    print("just sent: {}".format(str.decode()))  
 
 def main():
     global synRec
     global ackRec
     global aligned
-    global stopThread
 
     while not aligned:
         sendTime = time.time() + opTime
         while time.time() < sendTime and ackRec == 0:
-            # sending syn
-            str = ("{},{}\r\n".format(syn, 0)).encode()
-            ser.write(str)
-            print("just sent: {}".format(str.decode()))
+            sendSyn()
+
             listenTime = time.time() + ackWaitTime
             while time.time() < listenTime and time.time() < sendTime and ackRec == 0:
-                # listen for ack back
                 listenForAck()
         synRec = 0
         ackRec = 0
 
-        #ser.reset_input_buffer()
         listenTime = time.time() + opTime
         while time.time() < listenTime and synRec == 0:
-            # listen for syn
             listenForSyn()
     synRec = 0
     ackRec = 0
@@ -127,21 +97,18 @@ def main():
 
 
 if __name__ == "__main__":
-    resetPin = 18
+    disc = discovery.Discovery()
+    
+    '''resetPin = 18
     syn = 1
 
     ackWaitTime = 0.2
-
-    synWaitTime = 1
-    synSendTime = 1
-
     opTime = 0.5
 
-    stopThread = False
-    synRec = ackRec = aligned = 0
+    synRec = ackRec = 0 
+    aligned = False
     GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
     GPIO.output(resetPin, GPIO.HIGH)
 
-    # create send and receive thread classes and pass corresponding
-    # functions to each class
-    main()
+    # main()
+    '''
