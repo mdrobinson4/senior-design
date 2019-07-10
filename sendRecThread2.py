@@ -2,7 +2,6 @@ import threading
 import time
 import RPi.GPIO as GPIO
 import serial
-import struct
 import discovery
 
 GPIO.setwarnings(False)
@@ -97,8 +96,8 @@ def handshake():
     synRec = 0
     ackRec = 0
     
-    #handshakeThread.join()
-    #servoPathThread.join()
+    handshakeThread.join()
+    servoPathThread.join()
     
 
 if __name__ == "__main__":
