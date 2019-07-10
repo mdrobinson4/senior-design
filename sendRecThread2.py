@@ -38,7 +38,7 @@ def listenForSyn():
                 print("just sent: {}".format(str.decode()))
                 aligned = True
                 print("Aligned!")
-                # disc.setAligned()
+                disc.setAligned()
             else:
                 synRec = 0
                 ackRec = 0
@@ -62,7 +62,7 @@ def listenForAck():
             if synRec == syn and ackRec == syn + 1:
                 aligned = True
                 print("Aligned!")
-                # disc.setAligned()
+                disc.setAligned()
             else:
                 ackRec = 0
                 synRec = 0
