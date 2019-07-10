@@ -25,6 +25,7 @@ def readSerial():
             return data
 
 def listenForSyn():
+    print("listending for syn")
     global synRec
     global ackRec
     count = 0
@@ -43,7 +44,8 @@ def listenForSyn():
             synRec = data[0]
             ackRec = data[1]
             if synRec != 0 and ackRec == 0:
-                ser.write(("{},{}\r\n".format(syn, synRec + 1)).encode())
+                str = ("{},{}\r\n".format(syn, synRec + 1)).encode()
+                ser.write(str)
                 aligned = True
             else:
                 synRec = 0
@@ -54,6 +56,7 @@ def listenForSyn():
         pass
 
 def listenForAck():
+    print("listening for ack")
     global ackRec
     global synRec
     count = 0
@@ -77,9 +80,15 @@ def listenForAck():
                 print("Aligned!")
             else:
                 ackRec = 0
+                synRec = 0
         #ser.reset_input_buffer()
     except:
         pass
+
+def sendSyn():
+
+    str = ("{},{}\r\n".format(syn, 0)).encode()
+    ser.write(str)
                 
 
 def main():
@@ -89,15 +98,18 @@ def main():
     global stopThread
 
     while not aligned:
-        # sending syn
-        str = ("{},{}\r\n".format(syn, 0)).encode()
-        ser.write(str)
-        #ser.reset_input_buffer()
-        tEnd = time.time() + ackWaitTime
-        while time.time() < tEnd and ackRec == 0:
-            # listen for ack back
-            listenForAck()
-        
+        synTime = time.time() + synSendTime
+        while time.time() < synTime and ackRec == 0:
+            # sending syn
+            str = ("{},{}\r\n".format(syn, 0)).encode()
+            ser.write(str)
+            listenTime = time.time() + ackWaitTime
+            while time.time() < listenTime and ackRec == 0:
+                # listen for ack back
+                listenForAck()
+        synRec = 0
+        ackRec = 0
+
         #ser.reset_input_buffer()
         tEnd = time.time() + synWaitTime
         while time.time() < tEnd and synRec == 0:
@@ -112,8 +124,12 @@ def main():
 if __name__ == "__main__":
     resetPin = 18
     syn = 1
-    ackWaitTime = .5
-    synWaitTime = 1
+
+    ackWaitTime = 0.5
+
+    synWaitTime = 2
+    synSendTime = 2
+
     stopThread = False
     synRec = ackRec = aligned = 0
     GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
