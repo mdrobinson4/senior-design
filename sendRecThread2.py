@@ -102,22 +102,22 @@ def main():
     global stopThread
 
     while not aligned:
-        synTime = time.time() + synSendTime
-        while time.time() < synTime and ackRec == 0:
+        sendTime = time.time() + opTime
+        while time.time() < sendTime and ackRec == 0:
             # sending syn
             str = ("{},{}\r\n".format(syn, 0)).encode()
             ser.write(str)
             print("just sent: {}".format(str.decode()))
             listenTime = time.time() + ackWaitTime
-            while time.time() < listenTime and ackRec == 0:
+            while time.time() < listenTime and time.time() < sendTime and ackRec == 0:
                 # listen for ack back
                 listenForAck()
         synRec = 0
         ackRec = 0
 
         #ser.reset_input_buffer()
-        tEnd = time.time() + synWaitTime
-        while time.time() < tEnd and synRec == 0:
+        listenTime = time.time() + opTime
+        while time.time() < listenTime and synRec == 0:
             # listen for syn
             listenForSyn()
     synRec = 0
@@ -130,10 +130,12 @@ if __name__ == "__main__":
     resetPin = 18
     syn = 1
 
-    ackWaitTime = 0.5
+    ackWaitTime = 0.2
 
-    synWaitTime = 2
-    synSendTime = 2
+    synWaitTime = 1
+    synSendTime = 1
+
+    opTime = 0.5
 
     stopThread = False
     synRec = ackRec = aligned = 0
