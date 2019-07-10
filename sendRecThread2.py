@@ -96,8 +96,6 @@ def handshake():
     synRec = 0
     ackRec = 0
     
-    servoPathThread.join()
-    handshakeThread.join()
     
     
 
