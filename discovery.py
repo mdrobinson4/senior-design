@@ -56,11 +56,13 @@ class Discovery:
 
     def scan(self):
         i = 0
+        j = 0
         while not self.aligned:
-            print("theta: {}, phi: {}".format(theta[i], phi[i]))
-            self.servoY.ChangeDutyCycle(self.translate(self.theta[i], 0, 180, 0, 12.5))
-            self.servoZ.ChangeDutyCycle(self.translate(self.phi[i], 0, 180, 0, 12.5))
-            time.sleep(self.step[i])
+            j = j % self.pointCount
+            print("theta: {}, phi: {}".format(theta[j], phi[j]))
+            self.servoY.ChangeDutyCycle(self.translate(self.theta[j], 0, 180, 0, 12.5))
+            self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 0, 12.5))
+            time.sleep(self.step[j])
             i += 1
 
     def createPath(self):
