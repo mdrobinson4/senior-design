@@ -58,7 +58,7 @@ class Discovery:
         i = 0
         j = 0
         while not self.aligned:
-            j = j % self.pointCount
+            j = i % self.pointCount
             print("theta: {}, phi: {}".format(self.theta[j], self.phi[j]))
             self.servoY.ChangeDutyCycle(self.translate(self.theta[j], 0, 180, 0, 12.5))
             self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 0, 12.5))
