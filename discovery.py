@@ -86,7 +86,10 @@ class Discovery:
             prevVals = np.array([self.x[i - 1], self.y[i - 1], self.z[i - 1]])
             currVals = np.array([self.x[i], self.y[i], self.z[i]])
             try:
-                self.step[i-1] = arccos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
+                if (np.linalg.norm(prevVals) * np.linalg.norm(currVals) != 0.0
+                    self.step[i-1] = arccos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
+                else:
+                    self.ste[i-1] = 0
             except:
                 self.step[i-1] = 0
             self.step[i-1] = math.degrees(self.step[i-1] ) / self.omega
