@@ -1,151 +1,97 @@
 import RPi.GPIO as GPIO
-import threading
 import time
-import serial
 import numpy as np
 import math
-import sys
 from numpy import*
 from numpy.linalg import norm
-from socket import*
 import serial
-import threading
 
-GPIO.setwarnings(False)
+class discovery:
+    def _init__(self):
+        GPIO.setup(servoYPin, GPIO.OUT)
+        GPIO.setup(servoZPin, GPIO.OUT)
+        self.algned = False
+        self.servoZPin = 3
+        self.servoYPin = 2
+        # half angle from the axis of propagation for transmissions.
+        # The angle of field-of-view is 2 * beta
+        self.beta = 24
+        self.omega = 180.0
+        # resolution
+        self.pointCount = 1000
+        # steps -> will be used to determine how long the servo will
+        # be in a certain position. This is needed because the difference
+        # between two consecutive angles will not be equal. Which is not
+        # preferred since we want the angular speed to be constant, for now
+        self.steps = np.zeros(pointCount)
+        # the z-axis angle
+        self.theta = np.zeros(pointCount)
+        # the x-axis angle
+        self.phi = np.zeros(pointCount)
+        # x, y, and z axis points
+        self.x = np.zeros(pointCount)
+        self.y = np.zeros(pointCount)
+        self.z = np.zeros(pointCount)
+        self.step = np.zeros(pointCount)
+        self.s = np.linspace(-np.pi, np.pi, pointCount)
+        # convergence width
+        self.convWidth = math.radians(beta) * (2**(1/2))
+        # number of rotations
+        self.n = np.pi / convWidth
 
-GPIO.setmode(GPIO.BCM)
+        self.servoZ = GPIO.PWM(servoZPin, 50)
+        self.servoY = GPIO.PWM(servoYPin, 50)
+        GPIO.output(resetPin, GPIO.HIGH)
+        self.servoZ.start(7.5)
+        self.servoY.start(7.5)
+        self.createPath()
 
-def __init__(self, name):
-    serlf._stopevent = threading.Event()
-    self._sleepperiod = 1.0
-    
-    threading.Thread.__init__(self, name=name)
-    
-    def run(self):
-        # send acks
-        while not self._stopevent.isSet():
-            # send acks
-            self._stopevent.wait(self.sleepperiod)
-    
-    def join(self, timeout=None):
-        self._stope
+        def translate(self, value, leftMin, leftMax, rightMin, rightMax):
+            # Figure out how 'wide' each range is
+            leftSpan = leftMax - leftMin
+            rightSpan = rightMax - rightMin
+            # Convert the left range into a 0-1 range (float)
+            valueScaled = float(value - leftMin) / float(leftSpan)
+            # Convert the 0-1 range into a value in the right range.
+            return rightMin + (valueScaled * rightSpan)
 
+        def scan(self):
+            i = 0
+            while not self.aligned:
+                self.servoY.ChangeDutyCycle(translate(self.theta[i], 0, 180, 0, 12.5))
+                self.servoZ.ChangeDutyCycle(translate(self.phi[i], 0, 180, 0, 12.5))
+                time.sleep(self.step[i])
+                i += 1
 
-def translate(value, leftMin, leftMax, rightMin, rightMax):
-    # Figure out how 'wide' each range is
-    leftSpan = leftMax - leftMin
-    rightSpan = rightMax - rightMin
-    # Convert the left range into a 0-1 range (float)
-    valueScaled = float(value - leftMin) / float(leftSpan)
-    # Convert the 0-1 range into a value in the right range.
-    return rightMin + (valueScaled * rightSpan)
-  
-def scan():
-  i = 0
-  while i < pointCount:
-    #print((theta[i]))
-    servoY.ChangeDutyCycle(translate(theta[i], 0, 180, 0, 12.5))
-    servoZ.ChangeDutyCycle(translate(phi[i], 0, 180, 0, 12.5))
-    time.sleep(step[i])
-    i += 1
+        def createPath(self):
+            for i in range(1, pointCount):
+                # calculate the new x, y, and z values
+                self.x[i] = 3*math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
+                self.y[i] = 3*math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
+                self.z[i] = 3*math.sin(self.s[i] / 2)
+                # calculate the radius of the sphere
+                r = (self.x[i]**2 + self.y[i]**2 + sef.z[i]**2)**(1/2)
+                # calculate theta the z-axis angle
+                self.theta[i] = math.degrees(math.acos(self.z[i] / r))
+                # calculate phi the x-axis angle
+                self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
+                # needed since we can only rotate 180 degrees
+                # still not fully confident about this part
+                if self.x[i]<0 and self.y[i]<0:
+                    self.phi[i] = 180 - self.phi[i]
+                elif self.x[i]>=0 and self.y[i]<0:
+                    self.phi[i] = - self.phi[i]
+                elif self.x[i]<0 and self.y[i]>=0:
+                    self.phi[i] =  180 + self.phi[i]
 
-GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
+                prevVals = np.array([self.x[i - 1], self.y[i - 1], self.z[i - 1]])
+                currVals = np.array([self.x[i], self.y[i], self.z[i]])
 
-servoZPin = 3
-servoYPin = 2
+                self.step[i-1] = arccos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
+                self.step[i-1] = math.degrees(self.step[i-1] ) / self.omega
 
-GPIO.setup(servoYPin, GPIO.OUT)
-GPIO.setup(servoZPin, GPIO.OUT)
+            def setAligned(self):
+                self.aligned = True
 
-servoZ = GPIO.PWM(servoZPin, 50)
-servoY = GPIO.PWM(servoYPin, 50)
-
-ser = serial.Serial(
-    port='/dev/serial0',
-    baudrate = 115200,
-    parity=serial.PARITY_NONE,
-    stopbits=serial.STOPBITS_ONE,
-    bytesize=serial.EIGHTBITS,
-    timeout=1
-)
-
-resetPin = 18
-
-GPIO.output(resetPin, GPIO.HIGH)
-
-# ser.write(b'%d' % (i))
-# if (ser.in_waiting > 0):
-# x = ser.read(1)
-
-servoZ.start(7.5)
-servoY.start(7.5)
-
-# half angle from the axis of propagation for transmissions. 
-# The angle of field-of-view is 2 * beta
-beta = 24
-
-omega = 180.0
-
-# resolution
-pointCount = 1000
-
-# steps -> will be used to determine how long the servo will
-# be in a certain position. This is needed because the difference
-# between two consecutive angles will not be equal. Which is not 
-# preferred since we want the angular speed to be constant, for now
-steps = np.zeros(pointCount)
-
-# the z-axis angle
-theta = np.zeros(pointCount)
-# the x-axis angle
-phi = np.zeros(pointCount)
-
-# x, y, and z axis points
-x = np.zeros(pointCount)
-y = np.zeros(pointCount)
-z = np.zeros(pointCount)
-
-step = np.zeros(pointCount)
-
-s = np.linspace(-np.pi, np.pi, pointCount)
-
-# convergence width
-convWidth = math.radians(beta) * (2**(1/2))
-
-# number of rotations
-n = np.pi / convWidth
-
-for i in range(1, pointCount):
-  # calculate the new x, y, and z values
-  x[i] = 3*math.cos(s[i] / 2) * math.sin(s[i] * n)
-  y[i] = 3*math.cos(s[i] / 2) * math.cos(s[i] * n)
-  z[i] = 3*math.sin(s[i] / 2)
-  
-  #print(x[i], y[i], z[i])
-  #print(y[i] / x[i])
-  
-  # calculate the radius of the sphere
-  r = (x[i]**2 + y[i]**2 + z[i]**2)**(1/2)
-  
-  # calculate theta the z-axis angle
-  theta[i] = math.degrees(math.acos(z[i] / r))
-  # calculate phi the x-axis angle
-  
-  phi[i] = math.degrees(math.atan(y[i] / x[i]))
-  
-  # needed since we can only rotate 180 degrees
-  # still not fully confident about this part
-  if x[i]<0 and y[i]<0:
-    phi[i] = 180 - phi[i]
-  elif x[i]>=0 and y[i]<0:
-    phi[i] = - phi[i]
-  elif x[i]<0 and y[i]>=0:
-    phi[i] =  180 + phi[i]
-      
-  
-  prevVals = np.array([x[i - 1], y[i - 1], z[i - 1]])
-  currVals = np.array([x[i], y[i], z[i]])
-  
-  step[i - 1] = arccos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
-  step[i - 1] = math.degrees(step[i - 1] ) / omega
-scan()
+            def checkAligned(self):
+                return self.aligned
