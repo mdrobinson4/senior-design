@@ -102,9 +102,9 @@ def handshake():
 if __name__ == "__main__":
     syn = 1
     # time to listen for ack after sending syn
-    ackWaitTime = 0.2
+    ackWaitTime = 0.045
     # total time to send/receive
-    opTime = 0.5
+    opTime = 0.05
     synRec = ackRec = 0 
     aligned = False
     # servo path class
