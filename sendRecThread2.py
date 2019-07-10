@@ -38,15 +38,17 @@ def listenForSyn():
             x = (ser.read()).decode()
             if x != ',':
                 data.append(x)
-        print("received syn: {}".format(data))
-        synRec = data[0]
-        ackRec = data[1]
-        if synRec != 0 and ackRec == 0:
-            ser.write(("{},{}\r\n".format(syn, synRec + 1)).encode())
-            aligned = True
+        if len(data) > 0:
+            print("received syn: {}".format(data))
+            synRec = data[0]
+            ackRec = data[1]
+            if synRec != 0 and ackRec == 0:
+                ser.write(("{},{}\r\n".format(syn, synRec + 1)).encode())
+                aligned = True
+        ser.reset_input_buffer()
 
     except:
-        print('error: ')
+        pass
 
 def listenForAck():
     global ackRec
@@ -62,11 +64,13 @@ def listenForAck():
             x = (ser.read()).decode()
             if x != ',':
                 data.append(x)
-        print("received ack and syn: {}".format(data))
-        synRec = data[0]
-        ackRec = data[1]
-        if synRec != 0 and ackRec == syn + 1:
-            aligned = True
+        if len(data) > 0:
+            print("received ack and syn: {}".format(data))
+            synRec = data[0]
+            ackRec = data[1]
+            if synRec != 0 and ackRec == syn + 1:
+                aligned = True
+        ser.reset_input_buffer()
     except:
         pass
                 
