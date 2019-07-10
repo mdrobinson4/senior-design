@@ -45,9 +45,6 @@ class Discovery:
         self.servoZ.start(7.5)
         self.servoY.start(7.5)
         
-        self.createPath()
-        self.scan()
-        
     def translate(self, value, leftMin, leftMax, rightMin, rightMax):
         # Figure out how 'wide' each range is
         leftSpan = leftMax - leftMin
