@@ -80,17 +80,17 @@ def handshake():
     global aligned
 
     while not aligned:
-        sendTime = time.time() + opTime
+        # tx
+        sendTime = time.time() + opTime # total tx time
+        listenTime = time.time() + ackWaitTime # total time we wait for ack
         while time.time() < sendTime and ackRec == 0:
             sendSyn()
-
-            listenTime = time.time() + ackWaitTime
             while time.time() < listenTime and time.time() < sendTime and ackRec == 0:
-                listenForAck()
+                listenForAck()      
         synRec = 0
         ackRec = 0
-
-        listenTime = time.time() + opTime
+        # rx
+        listenTime = time.time() + opTime # total rx time (waiting for syn)
         while time.time() < listenTime and synRec == 0:
             listenForSyn()
     synRec = 0
