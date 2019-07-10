@@ -32,8 +32,9 @@ def listenForSyn():
 
     #print("listening for syn... {}".format(count))
     count += 1
+    print("ser: {}".format(ser.in_waiting))
     try:
-        while ser.in_waiting() > 0:
+        while ser.in_waiting > 0:
             x = (ser.read()).decode()
             if x != ',':
                 data.append(x)
@@ -55,8 +56,9 @@ def listenForAck():
 
     #print("Listening for ack.. {}".format(count))
     count += 1
+    print("ser: {}".format(ser.in_waiting))
     try:
-        while ser.in_waiting() > 0:
+        while ser.in_waiting > 0:
             x = (ser.read()).decode()
             if x != ',':
                 data.append(x)
@@ -66,7 +68,7 @@ def listenForAck():
         if synRec != 0 and ackRec == syn + 1:
             aligned = True
     except:
-        print('error: ')
+        pass
                 
 
 def main():
