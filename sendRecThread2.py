@@ -101,9 +101,6 @@ def handshake():
     servoPathThread.join()
     
 
-
-
-
 if __name__ == "__main__":
     syn = 1
     # time to listen for ack after sending syn
@@ -117,7 +114,7 @@ if __name__ == "__main__":
     disc = discovery.Discovery()
     disc.createPath()
     
-    servoPathThread = thread.Threading(target=disc.scan, daemon=True)
-    handshakeThread = thread.Threading(target=handshcake, daemon=True)
+    servoPathThread = threading.Thread(target=disc.scan, daemon=True)
+    handshakeThread = threading.Thread(target=handshcake, daemon=True)
     servoPathThread.start()
     handshakeThread.start()
