@@ -71,14 +71,14 @@ def listenForAck():
     try:
         while ser.in_waiting > 0:
             x = (ser.read()).decode()
-            if x != ',' and x != '\r' and X != '\n':
-                data.append(float(x))
+            if x != ',' and x != '\r' and x != '\n' and x != ' ':
+                data.append(int(x))
         if len(data) > 0:
             #ser.reset_input_buffer()
-            print("received ack and syn: {}".format(data))
+            print("just received ack and syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
-            if synRec != 0 and ackRec == syn + 1:
+            if synRec == syn and ackRec == syn + 1:
                 aligned = True
                 print("Aligned!")
             else:
@@ -92,6 +92,7 @@ def sendSyn():
 
     str = ("{},{}\r\n".format(syn, 0)).encode()
     ser.write(str)
+    print("just sent: {}".format(str))
                 
 
 def main():
@@ -106,6 +107,7 @@ def main():
             # sending syn
             str = ("{},{}\r\n".format(syn, 0)).encode()
             ser.write(str)
+            print("just sent: {}".format(str.decode()))
             listenTime = time.time() + ackWaitTime
             while time.time() < listenTime and ackRec == 0:
                 # listen for ack back
