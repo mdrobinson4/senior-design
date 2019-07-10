@@ -115,6 +115,6 @@ if __name__ == "__main__":
     disc.createPath()
     
     servoPathThread = threading.Thread(target=disc.scan, daemon=True)
-    handshakeThread = threading.Thread(target=handshcake, daemon=True)
+    handshakeThread = threading.Thread(target=handshake, daemon=True)
     servoPathThread.start()
     handshakeThread.start()
