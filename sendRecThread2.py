@@ -38,7 +38,7 @@ def listenForSyn():
             if x != ',' and x != '\r' and x != '\n':
                 data.append(float(x))
         if len(data) > 0:
-            ser.reset_input_buffer()
+            #ser.reset_input_buffer()
             print("received syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
@@ -65,12 +65,13 @@ def listenForAck():
             if x != ',' and x != '\r' and X != '\n':
                 data.append(float(x))
         if len(data) > 0:
-            ser.reset_input_buffer()
+            #ser.reset_input_buffer()
             print("received ack and syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
             if synRec != 0 and ackRec == syn + 1:
                 aligned = True
+                print("Aligned!")
         #ser.reset_input_buffer()
     except:
         pass
@@ -86,13 +87,13 @@ def main():
         # sending syn
         str = ("{},{}\r\n".format(syn, 0)).encode()
         ser.write(str)
-        ser.reset_input_buffer()
+        #ser.reset_input_buffer()
         tEnd = time.time() + ackWaitTime
         while time.time() < tEnd:
             # listen for ack back
             listenForAck()
         
-        ser.reset_input_buffer()
+        #ser.reset_input_buffer()
         tEnd = time.time() + synWaitTime
         while time.time() < tEnd:
             # listen for syn
@@ -105,8 +106,8 @@ def main():
 if __name__ == "__main__":
     resetPin = 18
     syn = 1
-    ackWaitTime = 2
-    synWaitTime = 2
+    ackWaitTime = .5
+    synWaitTime = 1
     stopThread = False
     synRec = ackRec = aligned = 0
     GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
