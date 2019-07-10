@@ -25,9 +25,10 @@ def readSerial():
             return data
 
 def listenForSyn():
-    print("listending for syn")
+    #print("listending for syn")
     global synRec
     global ackRec
+    global aligned
     count = 0
     data = []
 
@@ -37,7 +38,7 @@ def listenForSyn():
         while ser.in_waiting > 0:
             x = (ser.read()).decode()
             if x != ',' and x != '\r' and x != '\n':
-                data.append(float(x))
+                data.append(int(x))
         if len(data) > 0:
             #ser.reset_input_buffer()
             print("received syn: {}".format(data))
@@ -46,6 +47,7 @@ def listenForSyn():
             if synRec != 0 and ackRec == 0:
                 str = ("{},{}\r\n".format(syn, synRec + 1)).encode()
                 ser.write(str)
+                print("just sent: {}".format(str.decode()))
                 aligned = True
             else:
                 synRec = 0
@@ -56,9 +58,10 @@ def listenForSyn():
         pass
 
 def listenForAck():
-    print("listening for ack")
+    #print("listening for ack")
     global ackRec
     global synRec
+    global aligned
     count = 0
     data = []
 
