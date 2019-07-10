@@ -44,7 +44,7 @@ def listenForSyn():
             print("received syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
-            if synRec != 0 and ackRec == 0:
+            if synRec == syn and ackRec == 0:
                 str = ("{},{}\r\n".format(syn, synRec + 1)).encode()
                 ser.write(str)
                 print("just sent: {}".format(str.decode()))
