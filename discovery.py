@@ -88,7 +88,7 @@ class Discovery:
             try:
                 self.step[i-1] = arccos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
             except:
-                self[i-1] = 0
+                self.step[i-1] = 0
             self.step[i-1] = math.degrees(self.step[i-1] ) / self.omega
 
         def setAligned(self):
