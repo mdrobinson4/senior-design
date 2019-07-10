@@ -32,20 +32,20 @@ def listenForSyn():
 
     #print("listening for syn... {}".format(count))
     count += 1
-    print("ser: {}".format(ser.in_waiting))
     try:
         while ser.in_waiting > 0:
             x = (ser.read()).decode()
-            if x != ',':
-                data.append(x)
+            if x != ',' and x != '\r' and x != '\n':
+                data.append(float(x))
         if len(data) > 0:
+            ser.reset_input_buffer()
             print("received syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
             if synRec != 0 and ackRec == 0:
                 ser.write(("{},{}\r\n".format(syn, synRec + 1)).encode())
                 aligned = True
-        ser.reset_input_buffer()
+        #ser.reset_input_buffer()
 
     except:
         pass
@@ -58,19 +58,20 @@ def listenForAck():
 
     #print("Listening for ack.. {}".format(count))
     count += 1
-    print("ser: {}".format(ser.in_waiting))
+    #print("ser: {}".format(ser.in_waiting))
     try:
         while ser.in_waiting > 0:
             x = (ser.read()).decode()
-            if x != ',':
-                data.append(x)
+            if x != ',' and x != '\r' and X != '\n':
+                data.append(float(x))
         if len(data) > 0:
+            ser.reset_input_buffer()
             print("received ack and syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
             if synRec != 0 and ackRec == syn + 1:
                 aligned = True
-        ser.reset_input_buffer()
+        #ser.reset_input_buffer()
     except:
         pass
                 
