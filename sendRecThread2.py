@@ -7,6 +7,8 @@ import discovery
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
+GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
+GPIO.output(18, GPIO.HIGH)
 
 ser = serial.Serial(
     port='/dev/serial0',
@@ -37,6 +39,7 @@ def listenForSyn():
                 print("just sent: {}".format(str.decode()))
                 aligned = True
                 print("Aligned!")
+                # disc.setAligned()
             else:
                 synRec = 0
                 ackRec = 0
@@ -60,6 +63,7 @@ def listenForAck():
             if synRec == syn and ackRec == syn + 1:
                 aligned = True
                 print("Aligned!")
+                # disc.setAligned()
             else:
                 ackRec = 0
                 synRec = 0
@@ -71,7 +75,7 @@ def sendSyn():
     ser.write(str)
     print("just sent: {}".format(str.decode()))  
 
-def main():
+def handshake():
     global synRec
     global ackRec
     global aligned
@@ -92,23 +96,28 @@ def main():
             listenForSyn()
     synRec = 0
     ackRec = 0
+    
+    handshakeThread.join()
+    servoPathThread.join()
+    
 
 
 
 
 if __name__ == "__main__":
-    disc = discovery.Discovery()
-    
-    '''resetPin = 18
     syn = 1
-
+    # time to listen for ack after sending syn
     ackWaitTime = 0.2
+    # total time to send/receive
     opTime = 0.5
-
     synRec = ackRec = 0 
     aligned = False
-    GPIO.setup(resetPin, GPIO.OUT, initial=GPIO.LOW)
-    GPIO.output(resetPin, GPIO.HIGH)
-
-    # main()
-    '''
+    # servo path class
+    
+    disc = discovery.Discovery()
+    disc.createPath()
+    
+    servoPathThread = thread.Threading(target=disc.scan, daemon=True)
+    handshakeThread = thread.Threading(target=handshcake, daemon=True)
+    servoPathThread.start()
+    handshakeThread.start()
