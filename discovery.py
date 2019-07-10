@@ -44,7 +44,7 @@ class Discovery:
         self.servoY = GPIO.PWM(self.servoYPin, 50)
         self.servoZ.start(7.5)
         self.servoY.start(7.5)
-        
+
     def translate(self, value, leftMin, leftMax, rightMin, rightMax):
         # Figure out how 'wide' each range is
         leftSpan = leftMax - leftMin
@@ -97,8 +97,8 @@ class Discovery:
                 self.step[i-1] = 0
             self.step[i-1] = math.degrees(self.step[i-1] ) / self.omega
 
-        def setAligned(self):
-            self.aligned = True
+    def setAligned(self):
+        self.aligned = True
 
-        def checkAligned(self):
-            return self.aligned
+    def checkAligned(self):
+        return self.aligned
