@@ -28,12 +28,12 @@ def listenForSyn():
             x = (ser.read()).decode()
             if x != ',' and x != '\r' and x != '\n':
                 data.append(int(x))
-        if len(data) > 0:
+        if len(data) == 2:
             print("received syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
             if synRec == syn and ackRec == 0:
-                str = ("{},{}\r\n".format(syn, synRec + 1)).encode()
+                str = ("{},{}".format(syn, synRec + 1)).encode()
                 ser.write(str)
                 print("just sent: {}".format(str.decode()))
                 aligned = True
@@ -55,7 +55,7 @@ def listenForAck():
             x = (ser.read()).decode()
             if x != ',' and x != '\r' and x != '\n' and x != ' ':
                 data.append(int(x))
-        if len(data) > 0:
+        if len(data) == 2:
             print("just received ack and syn: {}".format(data))
             synRec = data[0]
             ackRec = data[1]
@@ -70,7 +70,7 @@ def listenForAck():
         pass
 
 def sendSyn():
-    str = ("{},{}\r\n".format(syn, 0)).encode()
+    str = ("{},{}".format(syn, 0)).encode()
     ser.write(str)
     print("just sent: {}".format(str.decode()))  
 
