@@ -60,7 +60,10 @@ def listenForSyn(end_time):
             continue
         if len(data) == len(id):
                 # send your id and the other pi's id + 1
-                str = ("{},{}".format(id, (bin(int(data,2) + int('0001',2))[2:]))).encode()
+                try:
+                    str = ("{},{}".format(id, (bin(int(data,2) + int('0001',2))[2:]))).encode()
+                except:
+                    continue
                 ser.write(str)
                 print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
                 aligned = True
