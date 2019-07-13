@@ -3,6 +3,7 @@ import time
 import RPi.GPIO as GPIO
 import serial
 import discovery
+from bitarray import bitarray
 
 # NOTE: SEND = 1, LISTEN = 0
 
@@ -25,11 +26,19 @@ ser = serial.Serial(
     timeout=0
 )
 
+def text_to_bits(text, encoding='utf-8', errors='surrogatepass'):
+    bits = bin(int.from_bytes(text.encode(encoding, errors), 'big'))[2:]
+    return bits.zfill(8 * ((len(bits) + 7) // 8))
+
+def text_from_bits(bits, encoding='utf-8', errors='surrogatepass'):
+    n = int(bits, 2)
+    return n.to_bytes((n.bit_length() + 7) // 8, 'big').decode(encoding, errors) or '\0'
+
 def getBits(str):
     return ''.join(format(ord(x), 'b') for x in str)
 
 def incBits(str):
-    return bin(int(getBits(str),2) + int('0001',2))[2:]
+    return text_from_bits(bin(int(text_to_bits(str),2) + int('0001',2))[2:])
     
 
 def getSerial():
@@ -152,9 +161,7 @@ def handshake():
 if __name__ == "__main__":
     # the designated syn
     syn = getSerial()
-    id = getBits(syn)
-    ack = bin(int(id,2) + int('0001',2))[2:]
-    print(ack, syn)
+    id = text_to_bits(syn)
     
     Rec = ackRec = 0 
     aligned = False
