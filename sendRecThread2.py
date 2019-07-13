@@ -12,9 +12,9 @@ GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 # send / send time
-op_time = 1.0
+op_time = 1
 # time when we will listen for ack
-ack_time = op_time / 10
+ack_time = op_time / 6.0
 
 ser = serial.Serial(
     port='/dev/serial0',
@@ -37,36 +37,30 @@ def getSerial():
     except:
         cpuserial = "ERROR000000000"
         return cpuserial
-    cpuserial = cpuserial.strip("0")
-    return ''.join(format(ord(x), 'b') for x in cpuserial)
+    return  cpuserial.strip("0")
 
 def listenForSyn(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
     
     ser.timeout = 0
-    ser.read()
+    #ser.read()
     
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        x = ser.read(1)
+        x = ser.read(len(id))
         try:
             # decode data
             data = x.decode()
             print('Received: _{}_ in listenForSyn at {}'.format(data, time.time()))
-            # convert string to string array
-            data = data.split()
-            # convert string array to int array
-            data = [int(num) for num in data]
         except:
             continue
-        if len(data) == 1:
-            
-            if data[0] == syn:
-                str = ("{},{}".format(syn, syn + 1)).encode()
+        if len(data) == len(id):
+                # send your id and the other pi's id + 1
+                str = ("{},{}".format(id, (bin(int(id,2)) + int('001',2)))[2:]).encode()
                 ser.write(str)
                 print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
                 aligned = True
@@ -79,27 +73,25 @@ def listenForAck(end_time):
     #ser.reset_output_buffer()
     
     ser.timeout = 0
-    ser.read()
+    #ser.read()
     
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        x = ser.read(3)
+        x = ser.read((len(id)*2)+1)
         try:
             # decode data
             data = x.decode()
             # convert string to array
             data = data.split(',')
-            # convert string array to int array
-            data = [int(num) for num in data]
         except:
             continue
         if len(data) == 2:
             print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
             #data = [y.decode() for y in x]
-            if data[0] == syn and data[1] == syn + 1:
+            if data[0] == id and data[1] == ack:
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
@@ -109,7 +101,7 @@ def sendSyn():
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
     
-    str = ("{}".format(syn)).encode()
+    str = ("{}".format(id)).encode()
     ser.write(str)
     #print("sent: {} in sendSyn".format(str.decode()))  
 
@@ -146,8 +138,9 @@ def handshake():
 
 if __name__ == "__main__":
     # the designated syn
-    id = getSerial()
-    print(id)
+    id = ''.join(format(ord(x), 'b') for x in getSerial())
+    ack = bin(int(id,2) + int('0001',2))[2:]
+    print(ack)
     
     syn = 1
     synRec = ackRec = 0 
