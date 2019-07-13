@@ -94,7 +94,7 @@ def sendSyn():
     
     str = ("{}".format(syn)).encode()
     ser.write(str)
-    print("sent: {} in sendSyn".format(str.decode()))  
+    #print("sent: {} in sendSyn".format(str.decode()))  
 
 def handshake():
     global synRec
