@@ -113,7 +113,7 @@ def listenForAck(end_time):
             print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
             #data = [y.decode() for y in x]
             print(data[1], bin(int(id,2)+int('001',2))[2:])
-            if data[1] == syn:
+            if data[1] == incBits(syn):
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
