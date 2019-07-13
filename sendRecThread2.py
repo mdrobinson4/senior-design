@@ -163,6 +163,8 @@ if __name__ == "__main__":
     syn = getSerial()
     id = text_to_bits(syn)
     
+    print(syn)
+    
     Rec = ackRec = 0 
     aligned = False
     # servo path class
