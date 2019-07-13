@@ -29,7 +29,10 @@ def listenForSyn(end_time):
         print('listening for syn')
         ser.timeout = end_time - time_passed
         x = ser.read(1)
-        data = x.decode()
+        try:
+            data = x.decode()
+        except:
+            pass
         if len(data) == 1:
             print(data)
             if data[0] == syn:
@@ -48,7 +51,10 @@ def listenForAck(end_time):
         print('Listening for ack')
         ser.timeout = end_time - time_passed
         x = ser.read(2)
-        data = x.decode()
+        try:
+            data = x.decode()
+        except:
+            pass
         if len(data) == 2:
             print(data)
             #data = [y.decode() for y in x]
