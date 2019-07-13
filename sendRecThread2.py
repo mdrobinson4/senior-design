@@ -35,6 +35,7 @@ def listenForSyn(end_time):
         try:
             # decode data
             data = x.decode()
+            print('Received in listenForSyn: {}'.format(data))
             # convert string to string array
             data = data.split()
             # convert string array to int array
@@ -42,7 +43,7 @@ def listenForSyn(end_time):
         except:
             continue
         if len(data) == 1:
-            print('Received in listenForSyn: {}'.format(data))
+            
             if data[0] == syn:
                 str = ("{},{}".format(syn, syn + 1)).encode()
                 ser.write(str)
