@@ -26,6 +26,10 @@ ser = serial.Serial(
 def listenForSyn(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
+    
+    ser.timeout = 0
+    ser.read()
+    
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
@@ -35,7 +39,7 @@ def listenForSyn(end_time):
         try:
             # decode data
             data = x.decode()
-            print('Received in listenForSyn: {}'.format(data))
+            print('Received: {} in listenForSyn'.format(data))
             # convert string to string array
             data = data.split()
             # convert string array to int array
@@ -47,6 +51,7 @@ def listenForSyn(end_time):
             if data[0] == syn:
                 str = ("{},{}".format(syn, syn + 1)).encode()
                 ser.write(str)
+                print("Sent: {} in listenForSyn".format(str))
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
@@ -55,6 +60,10 @@ def listenForSyn(end_time):
 def listenForAck(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
+    
+    ser.timeout = 0
+    ser.read()
+    
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
@@ -64,7 +73,6 @@ def listenForAck(end_time):
         try:
             # decode data
             data = x.decode()
-            print('Received in listenForAck: {}'.format(data))
             # convert string to array
             data = data.split(',')
             # convert string array to int array
@@ -72,7 +80,7 @@ def listenForAck(end_time):
         except:
             continue
         if len(data) == 2:
-            #print('Received in listenForAck: {}'.format(data))
+            print('Received {} in listenForAck: {}'.format(data))
             #data = [y.decode() for y in x]
             if data[0] == syn and data[1] == syn + 1:
                 aligned = True
@@ -86,7 +94,7 @@ def sendSyn():
     
     str = ("{}".format(syn)).encode()
     ser.write(str)
-    #print("just sent: {}".format(str.decode()))  
+    print("sent: {} in sendSyn".format(str.decode()))  
 
 def handshake():
     global synRec
