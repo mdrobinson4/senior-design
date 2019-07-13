@@ -29,8 +29,9 @@ def listenForSyn(end_time):
         print('listening for syn')
         ser.timeout = end_time - time_passed
         x = ser.read(1)
-        data = [y.decode() for y in x]
+        data = x.decode()
         if len(data) == 1:
+            print(data)
             if data[0] == syn:
                 str = ("{},{}".format(syn, data[0] + 1)).encode()
                 ser.write(str)
@@ -47,8 +48,10 @@ def listenForAck(end_time):
         print('Listening for ack')
         ser.timeout = end_time - time_passed
         x = ser.read(2)
-        data = [y.decode() for y in x]
+        data = x.decode()
         if len(data) == 2:
+            print(data)
+            #data = [y.decode() for y in x]
             if data[0] == syn and data[1] == syn + 1:
                 aligned = True
                 disc.setAligned()
@@ -67,16 +70,17 @@ def handshake():
 
     while not aligned:
         end_time = time.time() + op_time
-        while time.time() < end_time:
+        while time.time() < end_time and not aligned:
             sendSyn()
             # if we will go over the designated operation time after listening to ack
             # decrease the length of time that we listen for ack
             if time.time() + ack_time > end_time:
                 end_ack = time.time() + op_time - end_time
             else:
-                end_ack = ack_time
+                end_ack = ack_time + time.time()
             listenForAck(end_ack)
-        
+            
+        end_time = time.time() + op_time
         listenForSyn(end_time)
     
     
