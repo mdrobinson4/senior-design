@@ -33,7 +33,7 @@ def listenForSyn(end_time):
         if len(data) == 1:
             print(data)
             if data[0] == syn:
-                str = ("{},{}".format(syn, data[0] + 1)).encode()
+                str = ("{}{}".format(syn, syn + 1)).encode()
                 ser.write(str)
                 aligned = True
                 disc.setAligned()
@@ -59,7 +59,7 @@ def listenForAck(end_time):
         
 
 def sendSyn():
-    str = ("{},{}".format(syn, 0)).encode()
+    str = ("{}".format(syn)).encode()
     ser.write(str)
     #print("just sent: {}".format(str.decode()))  
 
