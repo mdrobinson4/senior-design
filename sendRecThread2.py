@@ -32,13 +32,18 @@ def listenForSyn(end_time):
         ser.timeout = end_time - time_passed
         x = ser.read(1)
         try:
+            # decode data
             data = x.decode()
+            # convert string to string array
+            data = data.split()
+            # convert string array to int array
+            data = [int(num) for num in data]
         except:
             pass
         if len(data) == 1:
             print(data)
-            if data[0] == syn:
-                str = ("{}{}".format(syn, syn + 1)).encode()
+            if data == syn:
+                str = ("{},{}".format(syn, syn + 1)).encode()
                 ser.write(str)
                 aligned = True
                 disc.setAligned()
@@ -54,7 +59,12 @@ def listenForAck(end_time):
         ser.timeout = end_time - time_passed
         x = ser.read(2)
         try:
+            # decode data
             data = x.decode()
+            # convert string to array
+            data = data.split(',')
+            # convert string array to int array
+            data = [int(num) for num in data]
         except:
             pass
         if len(data) == 2:
