@@ -4,6 +4,8 @@ import RPi.GPIO as GPIO
 import serial
 import discovery
 
+# NOTE: SEND = 1, LISTEN = 0
+
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
@@ -24,18 +26,19 @@ ser = serial.Serial(
 )
 
 def getSerial():
-  # Extract serial from cpuinfo file
-  cpuserial = "0000000000000000"
-  try:
-    f = open('/proc/cpuinfo','r')
-    for line in f:
-      if line[0:6]=='Serial':
-        cpuserial = line[10:26]
-    f.close()
-  except:
-    cpuserial = "ERROR000000000"
- 
-  return cpuserial
+    # Extract serial from cpuinfo file
+    cpuserial = "0000000000000000"
+    try:
+        f = open('/proc/cpuinfo','r')
+        for line in f:
+            if line[0:6]=='Serial':
+                cpuserial = line[10:26]
+        f.close()
+    except:
+        cpuserial = "ERROR000000000"
+        return cpuserial
+    cpuserial = cpuserial.strip("0")
+    return ''.join(format(ord(x), 'b') for x in cpuserial)
 
 def listenForSyn(end_time):
     #ser.reset_input_buffer()
@@ -114,31 +117,38 @@ def handshake():
     global synRec
     global ackRec
     global aligned
-
+    global id
+    
+    i = 0
     while not aligned:
-        end_time = time.time() + op_time
-        while time.time() < end_time and not aligned:
-            sendSyn()
-            # if we will go over the designated operation time after listening to ack
-            # decrease the length of time that we listen for ack
-            if time.time() + ack_time > end_time:
-                end_ack = time.time() + op_time - end_time
-            else:
-                end_ack = ack_time + time.time()
-            listenForAck(end_ack)
-        ser.reset_input_buffer()
-        ser.reset_output_buffer()
-            
-        end_time = time.time() + op_time
-        listenForSyn(end_time)
+        # send syn
+        if id[i % len(id)] == '1':
+            end_time = time.time() + op_time
+            while time.time() < end_time and not aligned:
+                sendSyn()
+                # if we will go over the designated operation time after listening to ack
+                # decrease the length of time that we listen for ack
+                if time.time() + ack_time > end_time:
+                    end_ack = time.time() + op_time - end_time
+                else:
+                    end_ack = ack_time + time.time()
+                listenForAck(end_ack)
+            ser.reset_input_buffer()
+            ser.reset_output_buffer()
+        # listen for syn
+        elif id[i % len(id)] == '0':
+            end_time = time.time() + op_time
+            listenForSyn(end_time)
+        i += 1
     
     
     
 
 if __name__ == "__main__":
     # the designated syn
-    serialNumber = getSerial()
-    print(serialNumber)
+    id = getSerial()
+    print(id)
+    
     syn = 1
     synRec = ackRec = 0 
     aligned = False
