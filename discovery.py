@@ -103,6 +103,7 @@ class Discovery:
             elif self.x[i] >= 0 and self.y[i] < 0:
                 self.phi[i] *= -1
             elif self.x[i] < 0 and self.y[i] >= 0:
+                self.phi[i] += 180.0
 
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
             curr = np.array([self.x[i], self.y[i], self.z[i]])
