@@ -24,6 +24,7 @@ ser = serial.Serial(
 )
 
 def listenForSyn(end_time):
+    ser.reset_input_buffer()
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
@@ -50,6 +51,7 @@ def listenForSyn(end_time):
 
 # end_time <= ack_time
 def listenForAck(end_time):
+    ser.reset_input_buffer()
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
