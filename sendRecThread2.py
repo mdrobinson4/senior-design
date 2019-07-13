@@ -10,9 +10,9 @@ GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 # send / send time
-op_time = 0.5
+op_time = 1.0
 # time when we will listen for ack
-ack_time = op_time / 3
+ack_time = op_time / 2
 
 ser = serial.Serial(
     port='/dev/serial0',
@@ -102,6 +102,8 @@ def handshake():
             else:
                 end_ack = ack_time + time.time()
             listenForAck(end_ack)
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
             
         end_time = time.time() + op_time
         listenForSyn(end_time)
