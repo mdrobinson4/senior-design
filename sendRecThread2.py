@@ -9,7 +9,9 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
+# send / send time
 op_time = 0.5
+# time when we will listen for ack
 ack_time = op_time / 3
 
 ser = serial.Serial(

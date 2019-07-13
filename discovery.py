@@ -80,6 +80,7 @@ class Discovery:
             
             time.sleep(.01)
             i += 1
+        GPIO.cleanup()
 
     def createPath(self):
         for i in range(1, self.pointCount):
@@ -97,17 +98,11 @@ class Discovery:
             self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
             # needed since we can only rotate 180 degrees
             # still not fully confident about this part
-            
             if self.x[i]<0 and self.y[i]<0:
                 self.phi[i] = 180 - self.phi[i]
             elif self.x[i] >= 0 and self.y[i] < 0:
                 self.phi[i] *= -1
             elif self.x[i] < 0 and self.y[i] >= 0:
-                self.phi[i] =  180 + self.phi[i]
-        
-        
-                
-            
 
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
             curr = np.array([self.x[i], self.y[i], self.z[i]])
@@ -117,8 +112,5 @@ class Discovery:
             #self.step[i-1] = math.acos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
             #self.step[i-1] = math.degrees(self.step[i-1]) / self.omega
 
-    def setAligned(self):
+    def aligned(self):
         self.aligned = True
-
-    def checkAligned(self):
-        return self.aligned
