@@ -55,7 +55,7 @@ def listenForAck(end_time):
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        x = ser.read(2)
+        x = ser.read(3)
         try:
             # decode data
             data = x.decode()
