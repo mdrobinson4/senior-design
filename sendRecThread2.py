@@ -12,9 +12,9 @@ GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 # send / send time
-op_time = 1
+op_time = 2
 # time when we will listen for ack
-ack_time = op_time / 6.0
+ack_time = op_time / 10.0
 
 ser = serial.Serial(
     port='/dev/serial0',
@@ -75,7 +75,7 @@ def listenForAck(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
     
-    ser.timeout = 0
+    #ser.timeout = 0
     #ser.read()
     
     global aligned
@@ -83,12 +83,13 @@ def listenForAck(end_time):
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        x = ser.read((len(id)*2)+1)
+        x = ser.read((len(id)  + len(ack) +1))
         try:
             # decode data
             data = x.decode()
             # convert string to array
             data = data.split(',')
+            print('ack: __{}__ at: {}'.format(data, time.time()))
         except:
             continue
         if len(data) == 2:
