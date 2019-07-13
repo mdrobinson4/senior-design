@@ -63,6 +63,7 @@ def listenForAck(end_time):
         try:
             # decode data
             data = x.decode()
+            print('Received in listenForAck: {}'.format(data))
             # convert string to array
             data = data.split(',')
             # convert string array to int array
@@ -70,7 +71,7 @@ def listenForAck(end_time):
         except:
             continue
         if len(data) == 2:
-            print('Received in listenForAck: {}'.format(data))
+            #print('Received in listenForAck: {}'.format(data))
             #data = [y.decode() for y in x]
             if data[0] == syn and data[1] == syn + 1:
                 aligned = True
