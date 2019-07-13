@@ -60,7 +60,7 @@ def listenForSyn(end_time):
             continue
         if len(data) == len(id):
                 # send your id and the other pi's id + 1
-                str = ("{},{}".format(id, (bin(int(id,2)) + int('001',2)))[2:]).encode()
+                str = ("{},{}".format(id, (bin(int(data,2) + int('0001',2))[2:]))).encode()
                 ser.write(str)
                 print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
                 aligned = True
@@ -91,7 +91,7 @@ def listenForAck(end_time):
         if len(data) == 2:
             print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
             #data = [y.decode() for y in x]
-            if data[0] == id and data[1] == ack:
+            if data[1] == ack:
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
