@@ -91,7 +91,7 @@ def listenForAck(end_time):
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        x = ser.read(len(syn) + len(str) + 1)
+        x = ser.read((len(syn)*2)+1)
         try:
             # decode data
             data = x.decode()
@@ -151,13 +151,12 @@ def handshake():
 
 if __name__ == "__main__":
     # the designated syn
-    syn = str(getSerial())
+    syn = getSerial()
     id = getBits(syn)
     ack = bin(int(id,2) + int('0001',2))[2:]
     print(ack, syn)
     
-    syn = 1
-    synRec = ackRec = 0 
+    Rec = ackRec = 0 
     aligned = False
     # servo path class
     
