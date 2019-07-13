@@ -12,7 +12,7 @@ GPIO.output(18, GPIO.HIGH)
 # send / send time
 op_time = 2.0
 # time when we will listen for ack
-ack_time = op_time / 4
+ack_time = op_time / 2
 
 ser = serial.Serial(
     port='/dev/serial0',
