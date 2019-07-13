@@ -23,6 +23,20 @@ ser = serial.Serial(
     timeout=0
 )
 
+def getSerial():
+  # Extract serial from cpuinfo file
+  cpuserial = "0000000000000000"
+  try:
+    f = open('/proc/cpuinfo','r')
+    for line in f:
+      if line[0:6]=='Serial':
+        cpuserial = line[10:26]
+    f.close()
+  except:
+    cpuserial = "ERROR000000000"
+ 
+  return cpuserial
+
 def listenForSyn(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
@@ -123,6 +137,8 @@ def handshake():
 
 if __name__ == "__main__":
     # the designated syn
+    serialNumber = getSerial()
+    print(serialNumber)
     syn = 1
     synRec = ackRec = 0 
     aligned = False
