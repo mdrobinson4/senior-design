@@ -39,7 +39,7 @@ def listenForSyn(end_time):
         try:
             # decode data
             data = x.decode()
-            print('Received: {} in listenForSyn'.format(data))
+            print('Received: _{}_ in listenForSyn at {}'.format(data, time.time()))
             # convert string to string array
             data = data.split()
             # convert string array to int array
@@ -51,7 +51,7 @@ def listenForSyn(end_time):
             if data[0] == syn:
                 str = ("{},{}".format(syn, syn + 1)).encode()
                 ser.write(str)
-                print("Sent: {} in listenForSyn at {}".format(str, time.time()))
+                print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
@@ -80,7 +80,7 @@ def listenForAck(end_time):
         except:
             continue
         if len(data) == 2:
-            print('Received: {} in listenForAck at {}'.format(data, time.time()))
+            print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
             #data = [y.decode() for y in x]
             if data[0] == syn and data[1] == syn + 1:
                 aligned = True
