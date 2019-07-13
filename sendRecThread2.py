@@ -28,7 +28,6 @@ def listenForSyn(end_time):
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
-        print('listening for syn')
         ser.timeout = end_time - time_passed
         x = ser.read(1)
         try:
@@ -41,8 +40,8 @@ def listenForSyn(end_time):
         except:
             pass
         if len(data) == 1:
-            print(data)
-            if data == syn:
+            print('Received in listenForSyn: {}'.format(data))
+            if data[0] == syn:
                 str = ("{},{}".format(syn, syn + 1)).encode()
                 ser.write(str)
                 aligned = True
@@ -55,7 +54,6 @@ def listenForAck(end_time):
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
-        print('Listening for ack')
         ser.timeout = end_time - time_passed
         x = ser.read(2)
         try:
@@ -68,7 +66,7 @@ def listenForAck(end_time):
         except:
             pass
         if len(data) == 2:
-            print(data)
+            print('Received in listenForAck: {}'.format(data))
             #data = [y.decode() for y in x]
             if data[0] == syn and data[1] == syn + 1:
                 aligned = True

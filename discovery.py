@@ -113,5 +113,5 @@ class Discovery:
             #self.step[i-1] = math.acos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
             #self.step[i-1] = math.degrees(self.step[i-1]) / self.omega
 
-    def aligned(self):
+    def setAligned(self):
         self.aligned = True
