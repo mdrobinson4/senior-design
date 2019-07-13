@@ -9,6 +9,9 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
+op_time = 0.5
+ack_time = op_time / 3
+
 ser = serial.Serial(
     port='/dev/serial0',
     baudrate = 115200,
@@ -18,61 +21,44 @@ ser = serial.Serial(
     timeout=0
 )
 
-def listenForSyn():
-    global synRec
-    global ackRec
+def listenForSyn(end_time):
     global aligned
-    data = []
-    try:
-        while ser.in_waiting > 0:
-            x = (ser.read()).decode()
-            if x != ',' and x != '\r' and x != '\n':
-                data.append(int(x))
-        if len(data) == 2:
-            print("received syn: {}".format(data))
-            synRec = data[0]
-            ackRec = data[1]
-            if synRec == syn and ackRec == 0:
-                str = ("{},{}".format(syn, synRec + 1)).encode()
+    time_passed = time.time()
+    while not aligned and time.time() < end_time:
+        data = []
+        print('listening for syn')
+        ser.timeout = end_time - time_passed
+        x = ser.read(1)
+        data = [y.decode() for y in x]
+        if len(data) == 1:
+            if data[0] == syn:
+                str = ("{},{}".format(syn, data[0] + 1)).encode()
                 ser.write(str)
-                print("just sent: {}".format(str.decode()))
                 aligned = True
-                print("Aligned!")
                 disc.setAligned()
-            else:
-                synRec = 0
-                ackRec = 0
-    except:
-        pass
+                print('Aligned!')
 
-def listenForAck():
-    global ackRec
-    global synRec
+# end_time <= ack_time
+def listenForAck(end_time):
     global aligned
-    data = []
-    try:
-        while ser.in_waiting > 0:
-            x = (ser.read()).decode()
-            if x != ',' and x != '\r' and x != '\n' and x != ' ':
-                data.append(int(x))
+    time_passed = time.time()
+    while not aligned and time.time() < end_time:
+        data = []
+        print('Listening for ack')
+        ser.timeout = end_time - time_passed
+        x = ser.read(2)
+        data = [y.decode() for y in x]
         if len(data) == 2:
-            print("just received ack and syn: {}".format(data))
-            synRec = data[0]
-            ackRec = data[1]
-            if synRec == syn and ackRec == syn + 1:
+            if data[0] == syn and data[1] == syn + 1:
                 aligned = True
-                print("Aligned!")
                 disc.setAligned()
-            else:
-                ackRec = 0
-                synRec = 0
-    except:
-        pass
+                print('Aligned!')
+        
 
 def sendSyn():
     str = ("{},{}".format(syn, 0)).encode()
     ser.write(str)
-    print("just sent: {}".format(str.decode()))  
+    #print("just sent: {}".format(str.decode()))  
 
 def handshake():
     global synRec
@@ -80,31 +66,25 @@ def handshake():
     global aligned
 
     while not aligned:
-        # tx
-        sendTime = time.time() + opTime # total tx time
-        listenTime = time.time() + ackWaitTime # total time we wait for ack
-        while time.time() < sendTime and ackRec == 0:
+        end_time = time.time() + op_time
+        while time.time() < end_time:
             sendSyn()
-            while time.time() < listenTime and time.time() < sendTime and ackRec == 0:
-                listenForAck()      
-        synRec = 0
-        ackRec = 0
-        # rx
-        listenTime = time.time() + opTime # total rx time (waiting for syn)
-        while time.time() < listenTime and synRec == 0:
-            listenForSyn()
-    synRec = 0
-    ackRec = 0
+            # if we will go over the designated operation time after listening to ack
+            # decrease the length of time that we listen for ack
+            if time.time() + ack_time > end_time:
+                end_ack = time.time() + op_time - end_time
+            else:
+                end_ack = ack_time
+            listenForAck(end_ack)
+        
+        listenForSyn(end_time)
     
     
     
 
 if __name__ == "__main__":
+    # the designated syn
     syn = 1
-    # time to listen for ack after sending syn
-    ackWaitTime = 0.3
-    # total time to send/receive
-    opTime = 0.5
     synRec = ackRec = 0 
     aligned = False
     # servo path class

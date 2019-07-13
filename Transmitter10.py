@@ -110,15 +110,15 @@ def scanxyz(threadName, counter, counter2, flag, flag2):
     global i
     i=0
     global Master
-    while Master:
-            angle_thetaa = float(thetaa[i])/18+2.5
+    while True:
+            angle_thetaa = float(thetaa[i%1000])/18+2.5
             p.ChangeDutyCycle(angle_thetaa)
-            angle_phia = float(phia[i])/18+2.5
+            angle_phia = float(phia[i%1000])/18+2.5
             p2.ChangeDutyCycle(angle_phia)
             #print(angle_thetaa, angle_phia)
-            time.sleep(step[i])
+            time.sleep(step[i%1000])
             i = i + 1
-            if i == nop:
+            if i == -10:
                 Hello = 0
                 Master = 0
                 print ("Reached end of scan path. No receiver found. Writing \"100\" to file...")
