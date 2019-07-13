@@ -25,6 +25,13 @@ ser = serial.Serial(
     timeout=0
 )
 
+def getBits(str):
+    return ''.join(format(ord(x), 'b') for x in str)
+
+def incBits(str):
+    return bin(int(getBits(str),2) + int('0001',2))[2:]
+    
+
 def getSerial():
     # Extract serial from cpuinfo file
     cpuserial = "0000000000000000"
@@ -51,17 +58,18 @@ def listenForSyn(end_time):
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        x = ser.read(len(id))
+        x = ser.read(len(syn))
         try:
             # decode data
             data = x.decode()
             print('Received: _{}_ in listenForSyn at {}'.format(data, time.time()))
         except:
             continue
-        if len(data) == len(id):
+        if len(data) == len(syn):
                 # send your id and the other pi's id + 1
                 try:
-                    str = ("{},{}".format(id, (bin(int(data,2) + int('0001',2))[2:]))).encode()
+                    #y = bin(int(data,2) + int('0001',2)
+                    str = ("{},{}".format(syn, incBits(data))).encode()
                 except:
                     continue
                 ser.write(str)
@@ -75,15 +83,15 @@ def listenForAck(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
     
-    #ser.timeout = 0
-    #ser.read()
+    ser.timeout = 0
+    ser.read()
     
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        x = ser.read((len(id)  + len(ack) +1))
+        x = ser.read(len(syn) + len(str) + 1)
         try:
             # decode data
             data = x.decode()
@@ -95,7 +103,8 @@ def listenForAck(end_time):
         if len(data) == 2:
             print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
             #data = [y.decode() for y in x]
-            if data[1] == ack:
+            print(data[1], bin(int(id,2)+int('001',2))[2:])
+            if data[1] == syn:
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
@@ -105,7 +114,7 @@ def sendSyn():
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
     
-    str = ("{}".format(id)).encode()
+    str = ("{}".format(syn)).encode()
     ser.write(str)
     #print("sent: {} in sendSyn".format(str.decode()))  
 
@@ -142,9 +151,10 @@ def handshake():
 
 if __name__ == "__main__":
     # the designated syn
-    id = ''.join(format(ord(x), 'b') for x in getSerial())
+    syn = str(getSerial())
+    id = getBits(syn)
     ack = bin(int(id,2) + int('0001',2))[2:]
-    print(ack)
+    print(ack, syn)
     
     syn = 1
     synRec = ackRec = 0 
