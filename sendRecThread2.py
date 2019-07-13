@@ -40,7 +40,7 @@ def listenForSyn(end_time):
             # convert string array to int array
             data = [int(num) for num in data]
         except:
-            pass
+            continue
         if len(data) == 1:
             print('Received in listenForSyn: {}'.format(data))
             if data[0] == syn:
@@ -68,7 +68,7 @@ def listenForAck(end_time):
             # convert string array to int array
             data = [int(num) for num in data]
         except:
-            pass
+            continue
         if len(data) == 2:
             print('Received in listenForAck: {}'.format(data))
             #data = [y.decode() for y in x]
