@@ -13,7 +13,7 @@ GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 # send / send time
-op_time = 2
+op_time = 0.5
 # time when we will listen for ack
 ack_time = op_time / 10.0
 
@@ -67,10 +67,10 @@ def listenForSyn(end_time):
         try:
             # decode data
             data = x.decode()
-            print('Received: _{}_ in listenForSyn at {}'.format(data, time.time()))
+            #print('Received: _{}_ in listenForSyn at {}'.format(data, time.time()))
         except:
             continue
-        print(data, syn)
+        #print(data, syn)
         if len(data) == len(syn):
             # send your id and the other pi's id + 1
             try:
@@ -79,10 +79,10 @@ def listenForSyn(end_time):
             except:
                 continue
             ser.write(str)
-            print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
+            #print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
             aligned = True
             disc.setAligned()
-            print('Aligned!')
+            #print('Aligned!')
 
 # end_time <= ack_time
 def listenForAck(end_time):
@@ -102,13 +102,13 @@ def listenForAck(end_time):
             data = x.decode()
             # convert string to array
             data = data.split(',')
-            print('ack: __{}__ at: {}'.format(data, time.time()))
+            #print('ack: __{}__ at: {}'.format(data, time.time()))
         except:
             continue
         if len(data) == 2:
-            print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
+            #print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
             #data = [y.decode() for y in x]
-            print(data[1], incBits(syn))
+            #print(data[1], incBits(syn))
             if data[1] == incBits(syn):
                 aligned = True
                 disc.setAligned()
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     syn = getSerial()
     id = text_to_bits(syn)
     
-    print(syn, incBits(syn))
+    #print(syn, incBits(syn))
     #quit()
     
     Rec = ackRec = 0 
