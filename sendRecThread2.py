@@ -82,7 +82,7 @@ def listenForSyn(end_time):
             #print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
             aligned = True
             disc.setAligned()
-            #print('Aligned!')
+            print('Aligned!')
 
 # end_time <= ack_time
 def listenForAck(end_time):
@@ -149,10 +149,7 @@ def handshake():
             end_time = time.time() + op_time
             listenForSyn(end_time)
         i += 1
-    
-    
-    
-
+        
 if __name__ == "__main__":
     # the designated syn
     syn = getSerial()
