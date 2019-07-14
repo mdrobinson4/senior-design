@@ -53,14 +53,14 @@ def getSerial():
     except:
         cpuserial = "ERROR000000000"
         return cpuserial
-    return  cpuserial.strip("0")
+    return  cpuserial[8:]
 
 def listenForSyn(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
     
     ser.timeout = 0
-    #ser.read()
+    ser.read()
     
     global aligned
     time_passed = time.time()
@@ -74,18 +74,19 @@ def listenForSyn(end_time):
             print('Received: _{}_ in listenForSyn at {}'.format(data, time.time()))
         except:
             continue
+        print(data, syn)
         if len(data) == len(syn):
-                # send your id and the other pi's id + 1
-                try:
-                    #y = bin(int(data,2) + int('0001',2)
-                    str = ("{},{}".format(syn, incBits(data))).encode()
-                except:
-                    continue
-                ser.write(str)
-                print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
-                aligned = True
-                disc.setAligned()
-                print('Aligned!')
+            # send your id and the other pi's id + 1
+            try:
+                #y = bin(int(data,2) + int('0001',2)
+                str = ("{},{}".format(syn, incBits(data))).encode()
+            except:
+                continue
+            ser.write(str)
+            print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
+            aligned = True
+            disc.setAligned()
+            print('Aligned!')
 
 # end_time <= ack_time
 def listenForAck(end_time):
@@ -112,7 +113,7 @@ def listenForAck(end_time):
         if len(data) == 2:
             print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
             #data = [y.decode() for y in x]
-            print(data[1], bin(int(id,2)+int('001',2))[2:])
+            print(data[1], incBits(syn))
             if data[1] == incBits(syn):
                 aligned = True
                 disc.setAligned()
@@ -163,7 +164,8 @@ if __name__ == "__main__":
     syn = getSerial()
     id = text_to_bits(syn)
     
-    print(syn)
+    print(syn, incBits(syn))
+    #quit()
     
     Rec = ackRec = 0 
     aligned = False
