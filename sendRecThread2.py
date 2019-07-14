@@ -56,17 +56,13 @@ def getSerial():
     return  cpuserial[8:]
 
 def listenForSyn(end_time):
-    #ser.reset_input_buffer()
-    #ser.reset_output_buffer()
-    
-    ser.timeout = 0
-    ser.read()
-    
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
+        # reset input buffer
+        ser.reset_input_buffer()
         x = ser.read(len(syn))
         try:
             # decode data
@@ -93,14 +89,13 @@ def listenForAck(end_time):
     #ser.reset_input_buffer()
     #ser.reset_output_buffer()
     
-    ser.timeout = 0
-    ser.read()
-    
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
+        # reset input buffer
+        ser.reset_input_buffer()
         x = ser.read((len(syn)*2)+1)
         try:
             # decode data
@@ -121,9 +116,8 @@ def listenForAck(end_time):
         
 
 def sendSyn():
-    #ser.reset_input_buffer()
-    #ser.reset_output_buffer()
-    
+    # reset output buffer
+    ser.reset_output_buffer()
     str = ("{}".format(syn)).encode()
     ser.write(str)
     #print("sent: {} in sendSyn".format(str.decode()))  
