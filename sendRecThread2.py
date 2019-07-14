@@ -3,7 +3,6 @@ import time
 import RPi.GPIO as GPIO
 import serial
 import discovery
-from bitarray import bitarray
 
 # NOTE: SEND = 1, LISTEN = 0
 
@@ -26,10 +25,12 @@ ser = serial.Serial(
     timeout=0
 )
 
+# convert text to bits
 def text_to_bits(text, encoding='utf-8', errors='surrogatepass'):
     bits = bin(int.from_bytes(text.encode(encoding, errors), 'big'))[2:]
     return bits.zfill(8 * ((len(bits) + 7) // 8))
 
+# convert bits to text
 def text_from_bits(bits, encoding='utf-8', errors='surrogatepass'):
     n = int(bits, 2)
     return n.to_bytes((n.bit_length() + 7) // 8, 'big').decode(encoding, errors) or '\0'
@@ -37,10 +38,12 @@ def text_from_bits(bits, encoding='utf-8', errors='surrogatepass'):
 def getBits(str):
     return ''.join(format(ord(x), 'b') for x in str)
 
+# increment string's bits
 def incBits(str):
     return text_from_bits(bin(int(text_to_bits(str),2) + int('0001',2))[2:])
-    
 
+# returns the raspberry pi's serial number
+# strips the leading zeros
 def getSerial():
     # Extract serial from cpuinfo file
     cpuserial = "0000000000000000"
@@ -55,76 +58,69 @@ def getSerial():
         return cpuserial
     return  cpuserial[8:]
 
+# listens for a syn
 def listenForSyn(end_time):
     global aligned
     time_passed = time.time()
     while not aligned and time.time() < end_time:
         data = []
+        # how long the serial input will sit waiting for len(
         ser.timeout = end_time - time_passed
-        # reset input buffer
+        # clear input buffer
         ser.reset_input_buffer()
         x = ser.read(len(syn))
         try:
             # decode data
             data = x.decode()
-            #print('Received: _{}_ in listenForSyn at {}'.format(data, time.time()))
         except:
             continue
-        #print(data, syn)
+        # make sure we got all of the data
         if len(data) == len(syn):
             # send your id and the other pi's id + 1
             try:
-                #y = bin(int(data,2) + int('0001',2)
                 str = ("{},{}".format(syn, incBits(data))).encode()
             except:
                 continue
             ser.write(str)
-            #print("Sent: _{}_ in listenForSyn at {}".format(str, time.time()))
             aligned = True
             disc.setAligned()
             print('Aligned!')
 
-# end_time <= ack_time
+# listen for an ack response
 def listenForAck(end_time):
-    #ser.reset_input_buffer()
-    #ser.reset_output_buffer()
-    
     global aligned
     time_passed = time.time()
+    # continue looping until we run out of time or we are aligned
     while not aligned and time.time() < end_time:
         data = []
         ser.timeout = end_time - time_passed
-        # reset input buffer
+        # clear input buffer
         ser.reset_input_buffer()
+        # read in the pi2's id and pi1 + 1 id
         x = ser.read((len(syn)*2)+1)
         try:
             # decode data
             data = x.decode()
             # convert string to array
             data = data.split(',')
-            #print('ack: __{}__ at: {}'.format(data, time.time()))
         except:
             continue
         if len(data) == 2:
-            #print('Received: _{}_ in listenForAck at {}'.format(data, time.time()))
-            #data = [y.decode() for y in x]
-            #print(data[1], incBits(syn))
+            # ensure that we got the correct response
             if data[1] == incBits(syn):
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
         
-
+# send syn
 def sendSyn():
-    # reset output buffer
+    # clear output buffer
     ser.reset_output_buffer()
     str = ("{}".format(syn)).encode()
     ser.write(str)
-    #print("sent: {} in sendSyn".format(str.decode()))  
 
+# 2-way handshake
 def handshake():
-    global synRec
-    global ackRec
     global aligned
     global id
     
@@ -151,20 +147,16 @@ def handshake():
         i += 1
         
 if __name__ == "__main__":
-    # the designated syn
+    # get the pi's serial number as text
     syn = getSerial()
+    # convert serial number text to bits
     id = text_to_bits(syn)
-    
-    #print(syn, incBits(syn))
-    #quit()
-    
-    Rec = ackRec = 0 
+    # breaks threads if true
     aligned = False
     # servo path class
-    
     disc = discovery.Discovery()
     disc.createPath()
-    
+    # servo path and handshake threads
     servoPathThread = threading.Thread(target=disc.scan, daemon=True)
     handshakeThread = threading.Thread(target=handshake, daemon=True)
     servoPathThread.start()
