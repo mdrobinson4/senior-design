@@ -13,20 +13,26 @@ GPIO.setup(self.2, GPIO.OUT) #
 
 class Discovery:
     def __init__(self):
+        # initialize servos
+        self.servoZ = GPIO.PWM(3, 50)
+        self.servoY = GPIO.PWM(2, 50)
+        self.servoZ.start(2.5)
+        self.servoY.start(2.5)
+        
         self.aligned = False
-        self.handshakeTime = 0
         self.mode = '1'
+        self.handshakeTime = 0
 
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
         self.beta = 12
-        self.convWidth = self.beta * (2**(1/2))
-        # number of rotations
-        self.n = 180.0 / self.convWidth
+        self.convWidth = math.radians(self.beta) * (2**(1/2))
+        # number of rotations in radians
+        self.n = math.pi / self.convWidth
         
-        # reception angular velocity
+        # reception angular velocity [ in degrees ]
         self.RecVelocity = 40 
-        # transmission angular velocity
+        # transmission angular velocity [ in degrees ]
         self.TranVelocity = 30
         # Receiver rounds 
         self.p = self.RecVelocity / 10
@@ -38,7 +44,7 @@ class Discovery:
         print('{} > {}'.format((self.p*math.radians(24))+(self.q*math.radians(24)), 1.28*self.n*math.pi))
         
         # Set handshake time
-        self.handshakeTime = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (2*1.28*math.pi)) 
+        self.handshakeTime = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (2*1.28*self.n*math.pi)) 
         self.handshakeTime /= (4*self.q*math.radians(self.recVelocity))
        
         
@@ -53,26 +59,49 @@ class Discovery:
         self.theta = np.zeros(self.pointCount)
         # the x-axis angle
         self.phi = np.zeros(self.pointCount)
-        
-        
 
-        
         # x, y, and z axis points
         self.x = np.zeros(self.pointCount)
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
-        # convergence width
-        
-        #print(math.radians(self.beta))
+    
+    # sets the path that the servo will take
+    def createPath(self):
+        for i in range(1, self.pointCount):
+            # calculate the new x, y, and z values
+            self.x[i] = math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
+            self.y[i] = math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
+            self.z[i] = math.sin(self.s[i] / 2)
+            
+            # calculate the radius of the sphere
+            r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)**(1/2)
+            # calculate theta the z-axis angle [ in degrees ]
+            self.theta[i] = math.degrees(math.acos(self.z[i] / r))
+            # calculate phi the x-axis angle [ in degrees ]
+            self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
+            
+            # needed since we can only rotate 180 degrees
+            # still not fully confident about this part
+            if self.x[i]<0 and self.y[i]<0:
+                self.phi[i] = 180 - self.phi[i]
+            elif self.x[i] >= 0 and self.y[i] < 0:
+                self.phi[i] *= -1
+            elif self.x[i] < 0 and self.y[i] >= 0:
+                self.phi[i] += 180.0
+                
+            # create an array of the previous coordinates
+            prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
+            # create an array of the current coordinates
+            curr = np.array([self.x[i], self.y[i], self.z[i]])
+            # calculate the change in the angle
+            angleChange = math.degrees(((math.acos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr)))))
+            # calculate the amount of time for the servo to rest
+            # so we maintain constant transmission and receiving mode speeds
+            self.tranStep[i-1] = angleChange[i-1] / self.tranVelocity
+            self.recStep[i-1] = angleChange[i-1] / self.recVelocity
 
-
-        self.servoZ = GPIO.PWM(self.servoZPin, 50)
-        self.servoY = GPIO.PWM(self.servoYPin, 50)
-        self.servoZ.start(2.5)
-        self.servoY.start(2.5)
-        
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
         return vector / np.linalg.norm(vector)
@@ -107,42 +136,6 @@ class Discovery:
                 time.sleep(self.recStep[i])
             i += 1
         GPIO.cleanup()
-
-    def createPath(self):
-        for i in range(1, self.pointCount):
-            # calculate the new x, y, and z values
-            
-            self.x[i] = math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
-            self.y[i] = math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
-            self.z[i] = math.sin(self.s[i] / 2)
-            
-            # calculate the radius of the sphere
-            r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)**(1/2)
-            # calculate theta the z-axis angle
-            self.theta[i] = math.degrees(math.acos(self.z[i] / r))
-            # calculate phi the x-axis angle
-            self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
-            # needed since we can only rotate 180 degrees
-            # still not fully confident about this part
-            if self.x[i]<0 and self.y[i]<0:
-                self.phi[i] = 180 - self.phi[i]
-            elif self.x[i] >= 0 and self.y[i] < 0:
-                self.phi[i] *= -1
-            elif self.x[i] < 0 and self.y[i] >= 0:
-                self.phi[i] += 180.0
-
-            prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
-            curr = np.array([self.x[i], self.y[i], self.z[i]])
-            #self.step[i - 1] = self.angle_between(prev, curr) / self.omega
-            self.step[i-1] = ((arccos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr))) ) * (180 / np.pi))
-            
-            # calculate the amount of time for the servo to rest
-            # so we maintain constant transmission and receiving mode speeds
-            self.tranStep[i-1] = self.step[i-1] / self.tranVelocity
-            slef.recStep[i-1] = self.step[i-1] / self.recVelocity
-            
-            #self.step[i-1] = math.acos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
-            #self.step[i-1] = math.degrees(self.step[i-1]) / self.omega
 
     def setAligned(self):
         self.aligned = True
