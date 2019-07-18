@@ -151,6 +151,11 @@ if __name__ == "__main__":
     syn = getSerial()
     # convert serial number text to bits
     id = text_to_bits(syn)
+    
+    # add floor(len(syn)/2) + 1 "0" bits and ceiling(len(syn)/2) "1" bits
+    id = "{}000001111".format(id)
+    syn = text_from_bits(id)
+    
     # breaks threads if true
     aligned = False
     # servo path class
