@@ -6,18 +6,42 @@ from numpy import*
 from numpy.linalg import norm
 import serial
 
+# MODE: 1 -> Transmit || 0 -> Receive
+
+GPIO.setup(self.3, GPIO.OUT) # 
+GPIO.setup(self.2, GPIO.OUT) # 
+
 class Discovery:
     def __init__(self):
-        self.servoZPin = 3
-        self.servoYPin = 2
-        GPIO.setup(self.servoYPin, GPIO.OUT)
-        GPIO.setup(self.servoZPin, GPIO.OUT)
         self.aligned = False
+        self.handshakeTime = 0
+        self.mode = '1'
 
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
         self.beta = 12
-        self.omega = 50.0
+        self.convWidth = self.beta * (2**(1/2))
+        # number of rotations
+        self.n = 180.0 / self.convWidth
+        
+        # reception angular velocity
+        self.RecVelocity = 40 
+        # transmission angular velocity
+        self.TranVelocity = 30
+        # Receiver rounds 
+        self.p = self.RecVelocity / 10
+        # transmitter rounds
+        self.q = self.TranVelocity / 10
+        
+        # Check Theorem 1
+        print('p*angle(T) + q*angle(R) > 1.28*n*pi')
+        print('{} > {}'.format((self.p*math.radians(24))+(self.q*math.radians(24)), 1.28*self.n*math.pi))
+        
+        # Set handshake time
+        self.handshakeTime = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (2*1.28*math.pi)) 
+        self.handshakeTime /= (4*self.q*math.radians(self.recVelocity))
+       
+        
         # resolution
         self.pointCount = 1000
         # steps -> will be used to determine how long the servo will
@@ -30,9 +54,8 @@ class Discovery:
         # the x-axis angle
         self.phi = np.zeros(self.pointCount)
         
-        self.convWidth = self.beta * (2**(1/2))
-        # number of rotations
-        self.n = 180.0 / self.convWidth
+        
+
         
         # x, y, and z axis points
         self.x = np.zeros(self.pointCount)
@@ -77,8 +100,11 @@ class Discovery:
             # print("theta: {}, phi: {}".format(self.theta[j], self.phi[j]))
             self.servoY.ChangeDutyCycle(self.translate(self.theta[j], 0, 180, 0, 12.5))
             self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 0, 12.5))
-            
-            time.sleep(.01)
+            # necessary since
+            if self.mode == '1':
+                time.sleep(self.tranStep[i])
+            elif self.mode == '0':
+                time.sleep(self.recStep[i])
             i += 1
         GPIO.cleanup()
 
@@ -108,7 +134,12 @@ class Discovery:
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
             curr = np.array([self.x[i], self.y[i], self.z[i]])
             #self.step[i - 1] = self.angle_between(prev, curr) / self.omega
-            self.step[i-1] = ((arccos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr))) ) * (180 / np.pi)) / self.omega
+            self.step[i-1] = ((arccos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr))) ) * (180 / np.pi))
+            
+            # calculate the amount of time for the servo to rest
+            # so we maintain constant transmission and receiving mode speeds
+            self.tranStep[i-1] = self.step[i-1] / self.tranVelocity
+            slef.recStep[i-1] = self.step[i-1] / self.recVelocity
             
             #self.step[i-1] = math.acos(np.dot(prevVals, currVals) / (np.linalg.norm(prevVals) * np.linalg.norm(currVals)))
             #self.step[i-1] = math.degrees(self.step[i-1]) / self.omega
