@@ -12,7 +12,7 @@ GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 # send / send time
-op_time = 0.3
+op_time = 0.0
 # time when we will listen for ack
 ack_time = op_time / 10.0
 
@@ -151,7 +151,6 @@ if __name__ == "__main__":
     syn = getSerial()
     # convert serial number text to bits
     id = text_to_bits(syn)
-    
     # add floor(len(syn)/2) + 1 "0" bits and ceiling(len(syn)/2) "1" bits
     id = "{}000001111".format(id)
     syn = text_from_bits(id)
@@ -161,6 +160,7 @@ if __name__ == "__main__":
     # servo path class
     disc = discovery.Discovery()
     disc.createPath()
+    global op_time = dis.handShakeTime / 2
     # servo path and handshake threads
     servoPathThread = threading.Thread(target=disc.scan, daemon=True)
     handshakeThread = threading.Thread(target=handshake, daemon=True)
