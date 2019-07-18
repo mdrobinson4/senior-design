@@ -11,11 +11,6 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
-# send / send time
-op_time = 0.0
-# time when we will listen for ack
-ack_time = op_time / 10.0
-
 ser = serial.Serial(
     port='/dev/serial0',
     baudrate = 115200,
@@ -160,7 +155,8 @@ if __name__ == "__main__":
     # servo path class
     disc = discovery.Discovery()
     disc.createPath()
-    global op_time = dis.handShakeTime / 2
+    op_time = dis.handShakeTime / 2
+    ack_time = op_time / 4
     # servo path and handshake threads
     servoPathThread = threading.Thread(target=disc.scan, daemon=True)
     handshakeThread = threading.Thread(target=handshake, daemon=True)
