@@ -23,6 +23,7 @@ class Discovery:
         self.mode = '1'
         self.handshakeTime = 0
 
+
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
         self.beta = 12
@@ -35,9 +36,14 @@ class Discovery:
         # transmission angular velocity [ in degrees ]
         self.TranVelocity = 30
         # Receiver rounds 
-        self.p = self.RecVelocity / 10
+        self.p = 4
         # transmitter rounds
-        self.q = self.TranVelocity / 10
+        self.q = 3
+        
+        # time we spend in each mode
+        self.op_time = (2*1.28*n*math.pi*self.q) / math.radians(self.tranVelocity)
+        # amount of time that beacon lasts
+        self.beacon_time = (p*math.radians(divergence
         
         # Check Theorem 1
         print('p*angle(T) + q*angle(R) > 1.28*n*pi')
