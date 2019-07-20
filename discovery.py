@@ -11,6 +11,10 @@ import serial
 GPIO.setup(self.3, GPIO.OUT) # 
 GPIO.setup(self.2, GPIO.OUT) # 
 
+def simplifyFraciont(num, denom):
+    commDenom = gcd(numer, denom)
+    return (num / commDenom, denom / commDenom)
+
 class Discovery:
     def __init__(self):
         # initialize servos
@@ -27,31 +31,26 @@ class Discovery:
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
         self.beta = 12
+        # width of coverage y
         self.convWidth = math.radians(self.beta) * (2**(1/2))
-        # number of rotations in radians
+        # number of rotations [ in radians ]
         self.n = math.pi / self.convWidth
         
         # reception angular velocity [ in degrees ]
-        self.RecVelocity = 40 
+        self.wR = 40 
         # transmission angular velocity [ in degrees ]
-        self.TranVelocity = 30
-        # Receiver rounds 
-        self.p = 4
-        # transmitter rounds
-        self.q = 3
+        self.wT = 30
+        # Receiver (p) rounds and transmission (q) rounds
+        (self.p, self.q) = simplify(self.wR, self.wT)
         
         # time we spend in each mode
-        self.op_time = (2*1.28*n*math.pi*self.q) / math.radians(self.tranVelocity)
+        self.op_time = (2*1.28*self.n*math.pi*self.q) / math.radians(self.wT)
         # amount of time that beacon lasts
-        self.beacon_time = (p*math.radians(divergence
+        self.beacon_time = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (1.28*n*math.pi)) / (8*self.q*math.radians(self.wR))
         
         # Check Theorem 1
         print('p*angle(T) + q*angle(R) > 1.28*n*pi')
         print('{} > {}'.format((self.p*math.radians(24))+(self.q*math.radians(24)), 1.28*self.n*math.pi))
-        
-        # Set handshake time
-        self.handshakeTime = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (2*1.28*self.n*math.pi)) 
-        self.handshakeTime /= (4*self.q*math.radians(self.recVelocity))
        
         
         # resolution
@@ -105,8 +104,8 @@ class Discovery:
             angleChange = math.degrees(((math.acos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr)))))
             # calculate the amount of time for the servo to rest
             # so we maintain constant transmission and receiving mode speeds
-            self.tranStep[i-1] = angleChange[i-1] / self.tranVelocity
-            self.recStep[i-1] = angleChange[i-1] / self.recVelocity
+            self.tranStep[i-1] = angleChange[i-1] / self.wT
+            self.recStep[i-1] = angleChange[i-1] / self.wR
 
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
@@ -145,3 +144,8 @@ class Discovery:
 
     def setAligned(self):
         self.aligned = True
+    
+   def changeMode(self, mode):
+        self.mode = mode
+        
+                                   
