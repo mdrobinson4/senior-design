@@ -20,6 +20,8 @@ ser = serial.Serial(
     timeout=0
 )
 
+# still need to set id
+
 # convert text to bits
 def text_to_bits(text, encoding='utf-8', errors='surrogatepass'):
     bits = bin(int.from_bytes(text.encode(encoding, errors), 'big'))[2:]

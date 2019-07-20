@@ -26,7 +26,7 @@ class Discovery:
         self.servoY.start(2.5)
         
         self.aligned = False
-        self.mode = '1'
+        self.mode = '0'
         self.handshakeTime = 0
 
 
@@ -39,19 +39,18 @@ class Discovery:
         self.n = math.pi / self.convWidth
         
         # reception angular velocity [ in degrees ]
-        self.wR = 400
+        self.wR = 800
         # transmission angular velocity [ in degrees ]
-        self.wT = 300
+        self.wT = 700
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
         
         # time we spend in each mode
-        self.op_time = (2*1.28*self.n*math.pi*self.q) / math.radians(self.wT)
+        self.op_time = (2*1.28*self.n*math.pi*self.q) / (self.wT)
         # amount of time that beacon lasts
-        self.beacon_time = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (1.28*self.n*math.pi)) / (8*self.q*math.radians(self.wR))
-        print(self.p, self.q, self.n)
+        self.beacon_time = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (2*math.pi)) / (8*self.q*(self.wR))
+        print('Beacon Time: {}, Op Time: {}'.format(self.beacon_time, self.op_time))
         # Check Theorem 1
-        print('p*angle(T) + q*angle(R) > 1.28*n*pi')
         print('{} > {}'.format((self.p*math.radians(24))+(self.q*math.radians(24)), 1.28*self.n*math.pi))
        
         
