@@ -8,18 +8,20 @@ import serial
 
 # MODE: 1 -> Transmit || 0 -> Receive
 
-GPIO.setup(self.3, GPIO.OUT) # 
-GPIO.setup(self.2, GPIO.OUT) # 
+GPIO.setmode(GPIO.BCM)
 
-def simplifyFraciont(num, denom):
-    commDenom = gcd(numer, denom)
+GPIO.setup(2, GPIO.OUT) # 
+GPIO.setup(3, GPIO.OUT) # 
+
+def simplify(num, denom):
+    commDenom = math.gcd(num, denom)
     return (num / commDenom, denom / commDenom)
 
 class Discovery:
     def __init__(self):
         # initialize servos
-        self.servoZ = GPIO.PWM(3, 50)
-        self.servoY = GPIO.PWM(2, 50)
+        self.servoZ = GPIO.PWM(2, 50)
+        self.servoY = GPIO.PWM(3, 50)
         self.servoZ.start(2.5)
         self.servoY.start(2.5)
         
@@ -37,17 +39,17 @@ class Discovery:
         self.n = math.pi / self.convWidth
         
         # reception angular velocity [ in degrees ]
-        self.wR = 40 
+        self.wR = 400
         # transmission angular velocity [ in degrees ]
-        self.wT = 30
+        self.wT = 300
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
         
         # time we spend in each mode
         self.op_time = (2*1.28*self.n*math.pi*self.q) / math.radians(self.wT)
         # amount of time that beacon lasts
-        self.beacon_time = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (1.28*n*math.pi)) / (8*self.q*math.radians(self.wR))
-        
+        self.beacon_time = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (1.28*self.n*math.pi)) / (8*self.q*math.radians(self.wR))
+        print(self.p, self.q, self.n)
         # Check Theorem 1
         print('p*angle(T) + q*angle(R) > 1.28*n*pi')
         print('{} > {}'.format((self.p*math.radians(24))+(self.q*math.radians(24)), 1.28*self.n*math.pi))
@@ -64,6 +66,8 @@ class Discovery:
         self.theta = np.zeros(self.pointCount)
         # the x-axis angle
         self.phi = np.zeros(self.pointCount)
+        self.tranStep = np.zeros(self.pointCount)
+        self.recStep = np.zeros(self.pointCount)
 
         # x, y, and z axis points
         self.x = np.zeros(self.pointCount)
@@ -101,11 +105,14 @@ class Discovery:
             # create an array of the current coordinates
             curr = np.array([self.x[i], self.y[i], self.z[i]])
             # calculate the change in the angle
-            angleChange = math.degrees(((math.acos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr)))))
+            try:
+                angleChange = math.degrees(((math.acos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr))))))
+            except:
+                print(angleChange)
             # calculate the amount of time for the servo to rest
             # so we maintain constant transmission and receiving mode speeds
-            self.tranStep[i-1] = angleChange[i-1] / self.wT
-            self.recStep[i-1] = angleChange[i-1] / self.wR
+            self.tranStep[i-1] = angleChange / self.wT
+            self.recStep[i-1] = angleChange / self.wR
 
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
@@ -136,16 +143,19 @@ class Discovery:
             self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 0, 12.5))
             # necessary since
             if self.mode == '1':
-                time.sleep(self.tranStep[i])
+                time.sleep(self.tranStep[j])
             elif self.mode == '0':
-                time.sleep(self.recStep[i])
+                time.sleep(self.recStep[j])
             i += 1
         GPIO.cleanup()
 
     def setAligned(self):
         self.aligned = True
     
-   def changeMode(self, mode):
+    def changeMode(self, mode):
         self.mode = mode
         
-                                   
+
+disc = Discovery()
+disc.createPath()
+disc.scan()
