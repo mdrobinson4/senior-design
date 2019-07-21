@@ -9,9 +9,9 @@ import serial
 # MODE: 1 -> Transmit || 0 -> Receive
 
 GPIO.setmode(GPIO.BCM)
+GPIO.setup(2, GPIO.OUT)
+GPIO.setup(3, GPIO.OUT)
 
-GPIO.setup(2, GPIO.OUT) # 
-GPIO.setup(3, GPIO.OUT) # 
 
 def simplify(num, denom):
     commDenom = math.gcd(num, denom)
@@ -153,6 +153,12 @@ class Discovery:
     
     def changeMode(self, mode):
         self.mode = mode
+    
+    def getOpTime(self):
+        return self.op_time
+    
+    def getBeaconTime(self):
+        return self.beacon_time
         
 
 disc = Discovery()
