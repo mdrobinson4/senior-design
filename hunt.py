@@ -24,7 +24,7 @@ ser = serial.Serial(
 
 # convert text to bits
 def text_to_bits(text, encoding='utf-8', errors='surrogatepass'):
-    bits = bin(int.from_bytes(text.encode(encoding, errors), 'big'))[2:]
+    bits = bin(int.from_bytes(text.encode(encoding, errors), 'big'))
     return bits.zfill(8 * ((len(bits) + 7) // 8))
 
 # convert bits to text
@@ -36,23 +36,24 @@ def getBits(str):
     return ''.join(format(ord(x), 'b') for x in str)
 
 # increment string's bits
-def incBits(str):
-    return text_from_bits(bin(int(text_to_bits(str),2) + int('0001',2))[2:])
+def incBits(bits):
+    x = int(bits, 2) + int('0001', 2)
+    return '{:04b}'.format(x)
 
 # listens for a syn
-def listenForSyn(op_time):
+def listenForSyn(op_time, id):
     global aligned
     # need to change since the read timeout here is the entire 
     # operation time, not a fraction of it as it in transmission mode
     ser.timeout = op_time
     end_time = op_time + time.time()
     ser.reset_input_buffer()
-    x = ser.resd(len(syn))
+    x = ser.read(len(id))
     try:
         # decode data
         data = x.decode()
-        if len(data) == len(syn):
-            str = ('{},{}'.format(syn, incBits(data))).encode()
+        if len(data) == len(id):
+            str = ('{},{}'.format(id, incBits(data))).encode()
             ser.write(str)
             aligned = True
             disc.setAligned()
@@ -63,7 +64,7 @@ def listenForSyn(op_time):
         time.sleep(end_time - time.time())
 
 # listen for an ack response
-def listenForAck(beacon_time, syn):
+def listenForAck(beacon_time, id):
     global aligned
     # need to change since the read timeout in reception mode
     # is the entire operation time, not a fraction of it as it 
@@ -72,7 +73,7 @@ def listenForAck(beacon_time, syn):
     # we need this to prevent us from exiting early
     end_time = time.time() + beacon_time
     ser.reset_input_buffer()
-    x = ser.read((len(syn)*2)+1)
+    x = ser.read((len(id)*2)+1)
     try:
         # decode data
         data = x.decode()
@@ -80,7 +81,7 @@ def listenForAck(beacon_time, syn):
         data = data.split(',')
         if len(data) == 2:
             # ensure we got the correct response
-            if data[1] == incBits(syn):
+            if data[1] == incBits(id):
                 aligned = True
                 disc.setAligned()
                 print('Aligned')
@@ -91,11 +92,11 @@ def listenForAck(beacon_time, syn):
         time.sleep(end_time - time.time())
      
 # send syn
-def sendSyn(beacon_time, syn):
+def sendSyn(beacon_time, id):
     end_time = beacon_time + time.time()
     # clear output buffer
     ser.reset_output_buffer()
-    str = ("{}".format(syn)).encode()
+    str = ("{}".format(id)).encode()
     ser.write(str)
     # don't start listening for ack until you've waited beacon_time seconds
     if time.time() < end_time:
@@ -118,19 +119,19 @@ def handshake(disc, id, syn):
             # repeatedly send syn and then listen for ack for op_time seconds
             while time.time() < op_time and not aligned:
                 # send out a syn
-                sendSyn(beacon_time, syn)
+                sendSyn(beacon_time, id)
                 # listen for an ack in response
-                listenForAck(beacon_time, syn)
+                listenForAck(beacon_time, id)
         # listen for syn
         elif id[i] == '0':
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[i])
-            listenForSyn(op_time)
+            listenForSyn(op_time, id)
         i += 1
         
 if __name__ == "__main__":
-    id = '0'
-    # id = '1'
+    id = '1'
+    #id = '0'
     idLen = len(id)
     # generate [ (floor(len(id) / 2) ) + 1 ] '0' bits
     for i in range(0, math.floor(idLen / 2) + 1):
@@ -138,10 +139,6 @@ if __name__ == "__main__":
     # generate [ ( ceiling(len(id) / 2) ) + 1 ] '1' bits
     for i in range(0, math.ceil(idLen / 2)):
         id += '1'
-    syn = text_from_bits(id)
-    
-    # breaks threads if true
-    aligned = False
     # servo path class
     disc = discovery.Discovery()
     disc.createPath()

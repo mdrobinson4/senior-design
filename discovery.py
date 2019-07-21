@@ -8,6 +8,7 @@ import serial
 
 # MODE: 1 -> Transmit || 0 -> Receive
 
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(2, GPIO.OUT)
 GPIO.setup(3, GPIO.OUT)
@@ -37,15 +38,16 @@ class Discovery:
         self.convWidth = math.radians(self.beta) * (2**(1/2))
         # number of rotations [ in radians ]
         self.n = math.pi / self.convWidth
+        print('n: {}', self.n)
         
         # reception angular velocity [ in degrees ]
-        self.wR = 800
+        self.wR = 810
         # transmission angular velocity [ in degrees ]
-        self.wT = 700
+        self.wT = 220
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
         
-        # time we spend in each mode
+        # time we spend in each mode [ each slot ]
         self.op_time = (2*1.28*self.n*math.pi*self.q) / (self.wT)
         # amount of time that beacon lasts
         self.beacon_time = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (2*math.pi)) / (8*self.q*(self.wR))
@@ -159,8 +161,3 @@ class Discovery:
     
     def getBeaconTime(self):
         return self.beacon_time
-        
-
-disc = Discovery()
-disc.createPath()
-disc.scan()
