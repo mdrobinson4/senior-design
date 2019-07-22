@@ -61,7 +61,8 @@ def listenForSyn(op_time, id):
     except:
         pass
     if time.time() < end_time:
-        time.sleep(end_time - time.time())
+        sleep_time = end_time - time.time()
+        time.sleep(sleep_time)
 
 # listen for an ack response
 def listenForAck(beacon_time, id):
@@ -89,7 +90,8 @@ def listenForAck(beacon_time, id):
         pass
     # wait until beacon_time seconds has passed before exiting
     if time.time() < end_time:
-        time.sleep(end_time - time.time())
+        sleep_time = end_time - time.time()
+        time.sleep(sleep_time)
      
 # send syn
 def sendSyn(beacon_time, id):
@@ -100,7 +102,8 @@ def sendSyn(beacon_time, id):
     ser.write(str)
     # don't start listening for ack until you've waited beacon_time seconds
     if time.time() < end_time:
-        time.sleep(end_time - time.time())
+        sleep_time = end_time - time.time()
+        time.sleep(sleep_time)
 
 # 2-way handshake
 def handshake(disc, id, syn):
