@@ -33,7 +33,7 @@ class Discovery:
 
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
-        self.beta = 12
+        self.beta = 24 * 2
         # width of coverage y
         self.convWidth = math.radians(self.beta) * (2**(1/2))
         # number of rotations [ in radians ]
