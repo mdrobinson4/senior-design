@@ -41,9 +41,9 @@ class Discovery:
         print('n: {}', self.n)
         
         # reception angular velocity [ in degrees ]
-        self.wR = 810
+        self.wR = 90
         # transmission angular velocity [ in degrees ]
-        self.wT = 220
+        self.wT = 80
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
         
