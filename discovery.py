@@ -33,27 +33,30 @@ class Discovery:
 
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
-        self.beta = 24 * 2
+        self.beta = 24
         # width of coverage y
-        self.convWidth = math.radians(self.beta) * (2**(1/2))
-        # number of rotations [ in radians ]
+        self.convWidth = (2**(1/2)) * math.radians(self.beta)
+        # number of rotations necessary to scan 3d area
         self.n = math.pi / self.convWidth
         print('n: {}', self.n)
+        return
         
         # reception angular velocity [ in degrees ]
-        self.wR = 90
+        self.wR = 900
         # transmission angular velocity [ in degrees ]
-        self.wT = 80
+        self.wT = 400
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
         
         # time we spend in each mode [ each slot ]
-        self.op_time = (2*1.28*self.n*math.pi*self.q) / (self.wT)
+        # Operation time = 2*p = 2*q rounds = (4*pi*q) / (Wt) = (4*pi*p) / (Wr)
+        self.op_time = (2*1.28*self.n*math.pi*self.q) / math.radians(self.wT)
         # amount of time that beacon lasts
-        self.beacon_time = ((self.p*math.radians(24)) + (self.q*math.radians(24)) - (2*math.pi)) / (8*self.q*(self.wR))
+        # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
+        self.beacon_time = ((self.beta*(self.p + self.q)) - (1.28*self.n*math.pi)) / (8*self.q*self.wR)
         print('Beacon Time: {}, Op Time: {}'.format(self.beacon_time, self.op_time))
         # Check Theorem 1
-        print('{} > {}'.format((self.p*math.radians(24))+(self.q*math.radians(24)), 1.28*self.n*math.pi))
+        print('{} > {}'.format((self.p*math.radians(self.beta))+(self.q*math.radians(self.beta)), 1.28*self.n*math.pi))
        
         
         # resolution
@@ -106,10 +109,10 @@ class Discovery:
             # create an array of the current coordinates
             curr = np.array([self.x[i], self.y[i], self.z[i]])
             # calculate the change in the angle
-            try:
+            if np.linalg.norm(prev) == 0 or np.linalg.norm(curr) == 0:
+                angleChange = 0
+            else:
                 angleChange = math.degrees(((math.acos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr))))))
-            except:
-                print(angleChange)
             # calculate the amount of time for the servo to rest
             # so we maintain constant transmission and receiving mode speeds
             self.tranStep[i-1] = angleChange / self.wT
@@ -148,7 +151,8 @@ class Discovery:
             elif self.mode == '0':
                 time.sleep(self.recStep[j])
             i += 1
-        GPIO.cleanup()
+        
+        #GPIO.cleanup()
 
     def setAligned(self):
         self.aligned = True

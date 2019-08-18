@@ -13,13 +13,12 @@ GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 ser = serial.Serial(
-    port='/dev/serial0',
+    port='/dev/ttyS0',
     baudrate = 115200,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=0,
-    write_timeout=0
+    timeout=0
 )
 
 # convert text to bits
@@ -106,21 +105,24 @@ def sendSyn(beacon_time, id):
         time.sleep(sleep_time)
 
 # 2-way handshake
-def handshake(disc, id, syn):
+def handshake(disc, id):
     aligned = False
     i = 0
     # get time constraints
     beacon_time = disc.getBeaconTime()
+    # when the operation time ends
     op_time = disc.getOpTime()
+    end_time = op_time + time.time()
     # set write timeout since this is constant
     ser.write_timeout = beacon_time
     while i < len(id) and not aligned:
+        print(id[i])
         # send syn and listen for ack
         if id[i] == '1':
             # change mode to transmission -> affects the angular velocity
             disc.changeMode(id[i])
             # repeatedly send syn and then listen for ack for op_time seconds
-            while time.time() < op_time and not aligned:
+            while time.time() < end_time and not aligned:
                 # send out a syn
                 sendSyn(beacon_time, id)
                 # listen for an ack in response
@@ -131,6 +133,8 @@ def handshake(disc, id, syn):
             disc.changeMode(id[i])
             listenForSyn(op_time, id)
         i += 1
+    disc.setAligned()
+    
         
 if __name__ == "__main__":
     id = '1'
@@ -147,7 +151,7 @@ if __name__ == "__main__":
     disc.createPath()
     # servo path and handshake threads
     servoPathThread = threading.Thread(target=disc.scan)
-    handshakeThread = threading.Thread(target=handshake, args=(id, syn, disc))
+    handshakeThread = threading.Thread(target=handshake, args=(disc, id))
     servoPathThread.start()
     handshakeThread.start()
     # wait till both end to exit
