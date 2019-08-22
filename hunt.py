@@ -42,56 +42,63 @@ def incBits(bits):
 # listens for a syn
 def listenForSyn(op_time, id):
     global aligned
-    # need to change since the read timeout here is the entire 
-    # operation time, not a fraction of it as it in transmission mode
-    ser.timeout = op_time
+    # time when we will stop listening for syn
     end_time = op_time + time.time()
-    ser.reset_input_buffer()
-    x = ser.read(len(id))
-    try:
-        # decode data
-        data = x.decode()
-        if len(data) == len(id):
-            str = ('{},{}'.format(id, incBits(data))).encode()
-            ser.write(str)
-            aligned = True
-            disc.setAligned()
-            print('Aligned!')
-    except:
-        pass
-    if time.time() < end_time:
-        sleep_time = end_time - time.time()
-        time.sleep(sleep_time)
+    # if we read garbage and there is time left
+    # keep listening for syn
+    while time.time() < end_time:
+        # set the read timeout
+        ser.timeout = end_time - time.time()
+        # reset the input buffer
+        ser.reset_input_buffer()
+        # read the received data
+        x = ser.read(len(id))
+        try:
+            # decode data
+            data = x.decode()
+            # if we got the expected syn (?)
+            if len(data) == len(id):
+                write the our id and syn+1 to other node
+                str = ('{},{}'.format(id, incBits(data))).encode()
+                ser.write(str)
+                aligned = True
+                disc.setAligned()
+                print('Aligned!')
+                return
+        except:
+            pass
 
 # listen for an ack response
 def listenForAck(beacon_time, id):
+    # set to true if we get an ACK
     global aligned
-    # need to change since the read timeout in reception mode
-    # is the entire operation time, not a fraction of it as it 
-    # is here
-    ser.timeout = beacon_time
     # we need this to prevent us from exiting early
     end_time = time.time() + beacon_time
-    ser.reset_input_buffer()
-    x = ser.read((len(id)*2)+1)
-    try:
-        # decode data
-        data = x.decode()
-        # convert string to array
-        data = data.split(',')
-        if len(data) == 2:
-            # ensure we got the correct response
-            if data[1] == incBits(id):
-                aligned = True
-                disc.setAligned()
-                print('Aligned')
-    except:
-        pass
-    # wait until beacon_time seconds has passed before exiting
-    if time.time() < end_time:
-        sleep_time = end_time - time.time()
-        time.sleep(sleep_time)
-     
+    while time.time() < end_time:
+        # initially the read time will be the beacon_time
+        # if we get garbage, the read time will be the
+        # difference of the end time and the current time
+        ser.timeout = end_time - time.time()
+        # reset the input buffer
+        ser.reset_input_buffer()
+        # read in the received values
+        x = ser.read((len(id)*2)+1)
+        try:
+            # decode data
+            data = x.decode()
+            # convert string to array
+            data = data.split(',')
+            # check to make sure the data is the correct length
+            if len(data) == 2:
+                # ensure we got the correct response
+                if data[1] == incBits(id):
+                    aligned = True
+                    disc.setAligned()
+                    print('Aligned!')
+                    return
+        except:
+            pass
+
 # send syn
 def sendSyn(beacon_time, id):
     end_time = beacon_time + time.time()
@@ -111,8 +118,8 @@ def handshake(disc, id):
     # get time constraints
     beacon_time = disc.getBeaconTime()
     # when the operation time ends
-    op_time = disc.getOpTime()
-    end_time = op_time + time.time()
+    op_time = disc.getPseudoSlotTime()
+    slot_end_time = op_time + time.time()
     # set write timeout since this is constant
     ser.write_timeout = beacon_time
     while i < len(id) and not aligned:
@@ -122,7 +129,7 @@ def handshake(disc, id):
             # change mode to transmission -> affects the angular velocity
             disc.changeMode(id[i])
             # repeatedly send syn and then listen for ack for op_time seconds
-            while time.time() < end_time and not aligned:
+            while time.time() < slot_end_time and not aligned:
                 # send out a syn
                 sendSyn(beacon_time, id)
                 # listen for an ack in response
@@ -131,19 +138,19 @@ def handshake(disc, id):
         elif id[i] == '0':
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[i])
+            # listen for an initial syn
             listenForSyn(op_time, id)
         i += 1
-    disc.setAligned()
-    
-        
+
+
 if __name__ == "__main__":
     id = '1'
     #id = '0'
     idLen = len(id)
-    # generate [ (floor(len(id) / 2) ) + 1 ] '0' bits
+    # generate [ (floor(len(id) / 2) ) + 1 ] '0' bits for pseudo slot sequence
     for i in range(0, math.floor(idLen / 2) + 1):
         id += '0'
-    # generate [ ( ceiling(len(id) / 2) ) + 1 ] '1' bits
+    # generate [ ( ceiling(len(id) / 2) ) + 1 ] '1' bits for pseudo slot sequence
     for i in range(0, math.ceil(idLen / 2)):
         id += '1'
     # servo path class
