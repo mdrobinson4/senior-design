@@ -33,9 +33,9 @@ class Discovery:
         # The angle of field-of-view is 2 * beta
         self.fullAngleDiv = 48
         # width of convergence (y)
-        self.convWidth = (fullAngleDiv / 2) * math.sqrt(2)
+        self.convWidth = (self.fullAngleDiv / 2) * math.sqrt(2)
         # number of rotations necessary to scan 3d area
-        self.n = math.pi / self.convWidth
+        self.n = 180 / self.convWidth
         # transmission angular velocity [ degrees / second ]
         self.wT = 230
         # reception angular velocity [ degrees / second ]
@@ -45,7 +45,7 @@ class Discovery:
 
         # time we spend in each mode [ each slot ]
         # Operation time = 2*p = 2*q rounds = (4*pi*q) / (Wt) = (4*pi*p) / (Wr)
-        self.pseudo_slot = (2*1.28*self.n*180) / self.wT
+        self.pseudo_slot = (2*1.28*self.n*math.pi*self.q) / self.wT
         # amount of time that beacon lasts
         # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
         self.beacon_time = ((self.p*self.fullAngleDiv) + (self.q*self.fullAngleDiv) - (1.28*self.n*180)) / (8*self.q*self.wR)

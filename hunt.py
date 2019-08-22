@@ -124,7 +124,6 @@ def handshake(disc, id):
     # set write timeout since this is constant
     ser.write_timeout = beacon_time
     while i < len(id) and not aligned:
-        print(id[i])
         # send syn and listen for ack
         if id[i] == '1':
             # change mode to transmission -> affects the angular velocity
@@ -142,6 +141,11 @@ def handshake(disc, id):
             # listen for an initial syn
             listenForSyn(op_time, id)
         i += 1
+    # the 3d area was fully scanned, but we still failed to find the other node
+    if not aligned:
+        print('Could not find other node')
+        disc.setAligned()
+    return
 
 
 if __name__ == "__main__":
