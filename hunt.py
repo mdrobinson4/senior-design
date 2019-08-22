@@ -58,7 +58,7 @@ def listenForSyn(op_time, id):
             data = x.decode()
             # if we got the expected syn (?)
             if len(data) == len(id):
-                write the our id and syn+1 to other node
+                # write the our id and syn+1 to other node
                 str = ('{},{}'.format(id, incBits(data))).encode()
                 ser.write(str)
                 aligned = True
@@ -107,6 +107,7 @@ def sendSyn(beacon_time, id):
     str = ("{}".format(id)).encode()
     ser.write(str)
     # don't start listening for ack until you've waited beacon_time seconds
+    # not sure if we need this (?)
     if time.time() < end_time:
         sleep_time = end_time - time.time()
         time.sleep(sleep_time)
