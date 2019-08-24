@@ -44,7 +44,7 @@ def getBits(str):
 # increment string's bits
 def incBits(bits):
     x = int(bits, 2) + int('0001', 2)
-    return '{:04b}'.format(x)
+    return '{:03b}'.format(x)
 
 # listens for a syn
 def listenForSyn(op_time, id):
