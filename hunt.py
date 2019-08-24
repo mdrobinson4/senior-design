@@ -56,6 +56,7 @@ def listenForSyn(op_time, id):
         try:
             # decode data
             data = x.decode()
+            print('got: {} from listenForSyn'.format(data))
             # if we got the expected syn (?)
             if len(data) == len(id):
                 # write the our id and syn+1 to other node
@@ -88,6 +89,7 @@ def listenForAck(beacon_time, id):
             data = x.decode()
             # convert string to array
             data = data.split(',')
+            print('got: {} from litenForAck'.format(data))
             # check to make sure the data is the correct length
             if len(data) == 2:
                 # ensure we got the correct response
@@ -101,6 +103,7 @@ def listenForAck(beacon_time, id):
 
 # send syn
 def sendSyn(beacon_time, id):
+    print('sending syn')
     end_time = beacon_time + time.time()
     # clear output buffer
     ser.reset_output_buffer()
@@ -120,10 +123,10 @@ def handshake(disc, id):
     beacon_time = disc.getBeaconTime()
     # when the operation time ends
     op_time = disc.getPseudoSlotTime()
-    slot_end_time = op_time + time.time()
     # set write timeout since this is constant
     ser.write_timeout = beacon_time
     while i < len(id) and not aligned:
+        slot_end_time = op_time + time.time()
         # send syn and listen for ack
         if id[i] == '1':
             # change mode to transmission -> affects the angular velocity
@@ -149,8 +152,8 @@ def handshake(disc, id):
 
 
 if __name__ == "__main__":
-    id = '1'
-    #id = '0'
+    #id = '1'
+    id = '0'
     idLen = len(id)
     # generate [ (floor(len(id) / 2) ) + 1 ] '0' bits for pseudo slot sequence
     for i in range(0, math.floor(idLen / 2) + 1):
