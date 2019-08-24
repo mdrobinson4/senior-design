@@ -121,10 +121,11 @@ def sendSyn(beacon_time, id):
     # don't start listening for ack until you've waited beacon_time seconds
     # not sure if we need this (?)
     
-    
+    '''
     if time.time() < end_time:
         sleep_time = end_time - time.time()
         time.sleep(sleep_time)
+    '''
     
 
 # 2-way handshake
