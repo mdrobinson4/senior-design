@@ -55,8 +55,8 @@ def listenForSyn(op_time, id):
         x = ser.read(len(id))
         try:
             # decode data
+            print('received: {} in listenForSyn'.format(x))
             data = x.decode()
-            print('received: {} in listenForSyn'.format(data))
             # if we got the expected syn (?)
             if len(data) == len(id):
                 # write the our id and syn+1 to other node
@@ -87,8 +87,8 @@ def listenForAck(beacon_time, id):
         x = ser.read((len(id)*2)+1)
         try:
             # decode data
+            print('received: {} in listenForAck'.format(x))
             data = x.decode()
-            print('received: {} in listenForAck'.format(data))
             # convert string to array
             data = data.split(',')
             # check to make sure the data is the correct length
@@ -133,9 +133,9 @@ def handshake(disc, id):
     #while 1 and not aligned:
         slot_end_time = op_time + time.time()
         # send syn and listen for ack
-        if id[i%len(id)] == '1':
+        if id[i] == '1':
             # change mode to transmission -> affects the angular velocity
-            disc.changeMode(id[i%len(id)])
+            disc.changeMode(id[i])
             # repeatedly send syn and then listen for ack for op_time seconds
             while time.time() < slot_end_time and not aligned:
                 # send out a syn
@@ -143,9 +143,9 @@ def handshake(disc, id):
                 # listen for an ack in response
                 listenForAck(beacon_time, id)
         # listen for syn
-        elif id[i%len(id)] == '0':
+        elif id[i] == '0':
             # change mode to reception -> affects the angular velocity
-            disc.changeMode(id[i%len(id)])
+            disc.changeMode(id[i])
             # listen for an initial syn
             listenForSyn(op_time, id)
         i += 1
@@ -157,8 +157,8 @@ def handshake(disc, id):
 
 
 if __name__ == "__main__":
-    #id = '1'
-    id = '0'
+    id = '1'
+    #id = '0'
     idLen = len(id)
     # generate [ (floor(len(id) / 2) ) + 1 ] '0' bits for pseudo slot sequence
     for i in range(0, math.floor(idLen / 2) + 1):
