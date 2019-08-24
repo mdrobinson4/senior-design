@@ -111,6 +111,7 @@ def listenForAck(beacon_time, id):
 def sendSyn(beacon_time, id):
     end_time = beacon_time + time.time()
     # clear output buffer
+    ser.write_timeout = beacon_time
     ser.reset_output_buffer()
     str = ("{}".format(id)).encode()
     ser.write(str)
