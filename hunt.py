@@ -4,6 +4,11 @@ import RPi.GPIO as GPIO
 import serial
 import discovery
 import math
+import os
+
+from dotenv import load_dotenv
+project_folder = os.path.expanduser('~/senior-design')  # adjust as appropriate
+load_dotenv(os.path.join(project_folder, '.env'))
 
 # NOTE: SEND = 1, LISTEN = 0
 
@@ -13,13 +18,15 @@ GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 ser = serial.Serial(
-    port='/dev/ttyS0',
+    port='/dev/serial0',
     baudrate = 115200,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
     timeout=0
 )
+
+aligned = False
 
 # convert text to bits
 def text_to_bits(text, encoding='utf-8', errors='surrogatepass'):
@@ -37,7 +44,7 @@ def getBits(str):
 # increment string's bits
 def incBits(bits):
     x = int(bits, 2) + int('0001', 2)
-    return '{:04b}'.format(x)
+    return '{:03b}'.format(x)
 
 # listens for a syn
 def listenForSyn(op_time, id):
@@ -46,7 +53,7 @@ def listenForSyn(op_time, id):
     end_time = op_time + time.time()
     # if we read garbage and there is time left
     # keep listening for syn
-    while time.time() < end_time:
+    while time.time() < end_time and not aligned:
         # set the read timeout
         ser.timeout = end_time - time.time()
         # reset the input buffer
@@ -55,7 +62,7 @@ def listenForSyn(op_time, id):
         x = ser.read(len(id))
         try:
             # decode data
-            print('received: {} in listenForSyn'.format(x))
+            print('[ listenForSyn ]: {}'.format(x))
             data = x.decode()
             # if we got the expected syn (?)
             if len(data) == len(id):
@@ -72,8 +79,8 @@ def listenForSyn(op_time, id):
 
 # listen for an ack response
 def listenForAck(beacon_time, id):
-    # set to true if we get an ACK
     global aligned
+    # set to true if we get an ACK
     # we need this to prevent us from exiting early
     end_time = time.time() + beacon_time
     while time.time() < end_time:
@@ -87,7 +94,7 @@ def listenForAck(beacon_time, id):
         x = ser.read((len(id)*2)+1)
         try:
             # decode data
-            print('received: {} in listenForAck'.format(x))
+            print('[ listenForAck ]: {}'.format(x))
             data = x.decode()
             # convert string to array
             data = data.split(',')
@@ -98,7 +105,7 @@ def listenForAck(beacon_time, id):
                     aligned = True
                     disc.setAligned()
                     print('Aligned!')
-                    return
+                    break
         except:
             pass
 
@@ -106,10 +113,11 @@ def listenForAck(beacon_time, id):
 def sendSyn(beacon_time, id):
     end_time = beacon_time + time.time()
     # clear output buffer
+    ser.write_timeout = beacon_time
     ser.reset_output_buffer()
     str = ("{}".format(id)).encode()
     ser.write(str)
-    print('sent: {} in sendSyn'.format(str))
+    #print('sent: {} in sendSyn'.format(str))
     # don't start listening for ack until you've waited beacon_time seconds
     # not sure if we need this (?)
     
@@ -118,10 +126,10 @@ def sendSyn(beacon_time, id):
         sleep_time = end_time - time.time()
         time.sleep(sleep_time)
     '''
+    
 
 # 2-way handshake
 def handshake(disc, id):
-    aligned = False
     i = 0
     # get time constraints
     beacon_time = disc.getBeaconTime()
@@ -157,8 +165,8 @@ def handshake(disc, id):
 
 
 if __name__ == "__main__":
-    id = '1'
-    #id = '0'
+    id = os.getenv('ID')
+    print(id)
     idLen = len(id)
     # generate [ (floor(len(id) / 2) ) + 1 ] '0' bits for pseudo slot sequence
     for i in range(0, math.floor(idLen / 2) + 1):
