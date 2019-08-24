@@ -60,7 +60,7 @@ def listenForSyn(op_time, id):
         x = ser.read(len(id))
         try:
             # decode data
-            print('received: {} in listenForSyn'.format(x))
+            print('[ listenForSyn ]: {}'.format(x))
             data = x.decode()
             # if we got the expected syn (?)
             if len(data) == len(id):
@@ -92,7 +92,7 @@ def listenForAck(beacon_time, id):
         x = ser.read((len(id)*2)+1)
         try:
             # decode data
-            print('received: {} in listenForAck'.format(x))
+            print('[ listenForAck ]: {}'.format(x))
             data = x.decode()
             # convert string to array
             data = data.split(',')
