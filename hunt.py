@@ -114,7 +114,7 @@ def sendSyn(beacon_time, id):
     ser.reset_output_buffer()
     str = ("{}".format(id)).encode()
     ser.write(str)
-    print('sent: {} in sendSyn'.format(str))
+    #print('sent: {} in sendSyn'.format(str))
     # don't start listening for ack until you've waited beacon_time seconds
     # not sure if we need this (?)
     
