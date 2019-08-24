@@ -26,6 +26,8 @@ ser = serial.Serial(
     timeout=0
 )
 
+aligned = False
+
 # convert text to bits
 def text_to_bits(text, encoding='utf-8', errors='surrogatepass'):
     bits = bin(int.from_bytes(text.encode(encoding, errors), 'big'))
@@ -45,7 +47,8 @@ def incBits(bits):
     return '{:04b}'.format(x)
 
 # listens for a syn
-def listenForSyn(op_time, id, aligned):
+def listenForSyn(op_time, id):
+    global aligned
     # time when we will stop listening for syn
     end_time = op_time + time.time()
     # if we read garbage and there is time left
@@ -70,12 +73,13 @@ def listenForSyn(op_time, id, aligned):
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
-                break
+                return
         except:
             pass
 
 # listen for an ack response
-def listenForAck(beacon_time, id, aligned):
+def listenForAck(beacon_time, id):
+    global aligned
     # set to true if we get an ACK
     # we need this to prevent us from exiting early
     end_time = time.time() + beacon_time
@@ -125,7 +129,6 @@ def sendSyn(beacon_time, id):
 
 # 2-way handshake
 def handshake(disc, id):
-    aligned = False
     i = 0
     # get time constraints
     beacon_time = disc.getBeaconTime()
@@ -145,13 +148,13 @@ def handshake(disc, id):
                 # send out a syn
                 sendSyn(beacon_time, id)
                 # listen for an ack in response
-                listenForAck(beacon_time, id, aligned)
+                listenForAck(beacon_time, id)
         # listen for syn
         elif id[i] == '0':
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[i])
             # listen for an initial syn
-            listenForSyn(op_time, id, aligned)
+            listenForSyn(op_time, id)
         i += 1
     # the 3d area was fully scanned, but we still failed to find the other node
     if not aligned:
