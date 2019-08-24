@@ -50,7 +50,7 @@ def listenForSyn(op_time, id, aligned):
     end_time = op_time + time.time()
     # if we read garbage and there is time left
     # keep listening for syn
-    while time.time() < end_time:
+    while time.time() < end_time and not aligned:
         # set the read timeout
         ser.timeout = end_time - time.time()
         # reset the input buffer
