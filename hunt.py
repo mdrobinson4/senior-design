@@ -129,8 +129,8 @@ def handshake(disc, id):
     op_time = disc.getPseudoSlotTime()
     # set write timeout since this is constant
     ser.write_timeout = beacon_time
-    #while i < len(id) and not aligned:
-    while 1 and not aligned:
+    while i < len(id) and not aligned:
+    #while 1 and not aligned:
         slot_end_time = op_time + time.time()
         # send syn and listen for ack
         if id[i%len(id)] == '1':
