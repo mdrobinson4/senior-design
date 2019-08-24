@@ -151,7 +151,7 @@ def handshake(disc, id):
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[i])
             # listen for an initial syn
-            listenForSyn(op_time, id, algined)
+            listenForSyn(op_time, id, aligned)
         i += 1
     # the 3d area was fully scanned, but we still failed to find the other node
     if not aligned:
