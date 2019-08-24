@@ -71,7 +71,7 @@ def listenForSyn(op_time, id):
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
-                return
+                break
         except:
             pass
 
@@ -103,7 +103,7 @@ def listenForAck(beacon_time, id):
                     aligned = True
                     disc.setAligned()
                     print('Aligned!')
-                    return
+                    break
         except:
             pass
 
