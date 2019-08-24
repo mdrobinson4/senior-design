@@ -4,6 +4,11 @@ import RPi.GPIO as GPIO
 import serial
 import discovery
 import math
+import os
+
+from dotenv import load_dotenv
+project_folder = os.path.expanduser('~/senior-design')  # adjust as appropriate
+load_dotenv(os.path.join(project_folder, '.env'))
 
 # NOTE: SEND = 1, LISTEN = 0
 
@@ -157,8 +162,8 @@ def handshake(disc, id):
 
 
 if __name__ == "__main__":
-    id = '1'
-    #id = '0'
+    id = os.getenv('ID')
+    print(id)
     idLen = len(id)
     # generate [ (floor(len(id) / 2) ) + 1 ] '0' bits for pseudo slot sequence
     for i in range(0, math.floor(idLen / 2) + 1):
