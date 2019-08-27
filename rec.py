@@ -1,3 +1,10 @@
+import time
+import RPi.GPIO as GPIO
+import serial
+import discovery
+import math
+import os
+
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
