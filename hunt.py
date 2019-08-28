@@ -100,6 +100,7 @@ def listenForAck(beacon_time, id):
             data = data.split(',')
             # check to make sure the data is the correct length
             if len(data) == 2:
+                
                 # ensure we got the correct response
                 if data[1] == incBits(id):
                     aligned = True
@@ -121,11 +122,11 @@ def sendSyn(beacon_time, id):
     # don't start listening for ack until you've waited beacon_time seconds
     # not sure if we need this (?)
     
-    
+    '''
     if time.time() < end_time:
         sleep_time = end_time - time.time()
         time.sleep(sleep_time)
-    
+    '''
     
 
 # 2-way handshake
@@ -185,3 +186,4 @@ if __name__ == "__main__":
     # wait till both end to exit
     servoPathThread.join()
     handshakeThread.join()
+
