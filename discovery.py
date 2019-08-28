@@ -31,15 +31,15 @@ class Discovery:
 
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
-        self.fullAngleDiv = 48
+        self.fullAngleDiv = 56
         # width of convergence (y)
         self.convWidth = (self.fullAngleDiv / 2) * math.sqrt(2)
         # number of rotations necessary to scan 3d area
         self.n = 180 / self.convWidth
         # transmission angular velocity [ degrees / second ]
-        self.wT = 230
+        self.wT = 130
         # reception angular velocity [ degrees / second ]
-        self.wR = 190
+        self.wR = 110
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
 
@@ -160,3 +160,4 @@ class Discovery:
 
     def getBeaconTime(self):
         return self.beacon_time
+
