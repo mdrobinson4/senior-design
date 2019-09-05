@@ -151,6 +151,8 @@ class Discovery:
             elif self.mode == '0':
                 time.sleep(self.recStep[j])
             i += 1
+        self.servoY.ChangeDutyCycle(7.5)
+        self.servoZ.ChangeDutyCycle(7.5)
         
         #GPIO.cleanup()
 
