@@ -161,7 +161,7 @@ def handshake(disc, id):
     # the 3d area was fully scanned, but we still failed to find the other node
     if not aligned:
         print('Could not find other node')
-        disc.setAligned()
+        disc.discoveryFailed = True
     return
 
 
@@ -186,4 +186,3 @@ if __name__ == "__main__":
     # wait till both end to exit
     servoPathThread.join()
     handshakeThread.join()
-
