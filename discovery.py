@@ -23,10 +23,11 @@ class Discovery:
         # initialize servos
         self.servoZ = GPIO.PWM(2, 50)
         self.servoY = GPIO.PWM(3, 50)
-        self.servoZ.start(2.5)
-        self.servoY.start(2.5)
+        #self.servoZ.start(7.5)
+        #self.servoY.start(7.5)
 
         self.aligned = False
+        self.discoveryFailed = False
         self.mode = '0'
 
         # half angle from the axis of propagation for transmissions.
@@ -135,17 +136,25 @@ class Discovery:
     def scan(self):
         i = 0
         j = 0
-        while not self.aligned:
+        while not self.aligned and not self.discoveryFailed:
             j = i % self.pointCount
-            # print("theta: {}, phi: {}".format(self.theta[j], self.phi[j]))
-            self.servoY.ChangeDutyCycle(self.translate(self.theta[j], 0, 180, 0, 12.5))
-            self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 0, 12.5))
+            if i == 0:
+                self.servoY.start(self.translate(self.theta[j], 0, 180, 2.5, 12.5))
+                self.servoZ.start(self.translate(self.phi[j], 0, 180, 2.5, 12.5))
+            else:
+                # print("theta: {}, phi: {}".format(self.theta[j], self.phi[j]))
+                self.servoY.ChangeDutyCycle(self.translate(self.theta[j], 0, 180, 2.5, 12.5))
+                self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 2.5, 12.5))
             # necessary since
             if self.mode == '1':
                 time.sleep(self.tranStep[j])
             elif self.mode == '0':
                 time.sleep(self.recStep[j])
             i += 1
+            
+        if self.discoveryFailed:
+            self.servoY.ChangeDutyCycle(12.5)
+            self.servoZ.ChangeDutyCycle(7.5)
 
         #GPIO.cleanup()
 
@@ -160,4 +169,3 @@ class Discovery:
 
     def getBeaconTime(self):
         return self.beacon_time
-
