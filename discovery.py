@@ -22,9 +22,11 @@ class Discovery:
     def __init__(self):
         # initialize servos
         self.servoZ = GPIO.PWM(2, 50)
-        self.servoY = GPIO.PWM(3, 50)
-        #self.servoZ.start(7.5)
-        #self.servoY.start(7.5)
+        self.servoY= GPIO.PWM(3, 50)
+        self.servoZ.ChangeDutyCycle(0)
+        self.servoY.ChangeDutyCycle(0)
+        #self.servoZ.start(0)
+        #self.servoY.start(0)
 
         self.aligned = False
         self.discoveryFailed = False
@@ -46,7 +48,7 @@ class Discovery:
 
         # time we spend in each mode [ each slot ]
         # Operation time = 2*p = 2*q rounds = (4*pi*q) / (Wt) = (4*pi*p) / (Wr)
-        self.pseudo_slot = (2*1.28*self.n*math.pi*self.q) / self.wT
+        self.pseudo_slot = (2*1.28*self.n*math.pi*self.q) / (self.wT)
         # amount of time that beacon lasts
         # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
         self.beacon_time = ((self.p*self.fullAngleDiv) + (self.q*self.fullAngleDiv) - (1.28*self.n*180)) / (8*self.q*self.wR)
@@ -73,16 +75,24 @@ class Discovery:
         self.x = np.zeros(self.pointCount)
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
+        #self.p = np.zeros(self.pointCount)
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
     # sets the path that the servo will take
     def createPath(self):
+        lin = np.linspace(-math.pi, math.pi, num=self.pointCount)
+        p = 0
+        print(lin[1])
         for i in range(1, self.pointCount):
+            p = math.cos(lin[i]/2)
+            self.x[i] = p*math.sin(self.n*lin[i])
+            self.y[i] = p*math.cos(self.n*lin[i])
+            self.z[i] = math.sin(lin[i]/2)
             # calculate the new x, y, and z values
-            self.x[i] = math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
-            self.y[i] = math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
-            self.z[i] = math.sin(self.s[i] / 2)
+            #self.x[i] = math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
+            #self.y[i] = math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
+            #self.z[i] = math.sin(self.s[i] / 2)
 
             # calculate the radius of the sphere
             r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)**(1/2)
@@ -92,12 +102,12 @@ class Discovery:
             self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
 
             # needed since we can only rotate 180 degrees
-            # still not fully confident about this part
-            if self.x[i]<0 and self.y[i]<0:
+            #self.phi[i] = self.translate(self.phi[i],-90,90,0,180)
+            if self.x[i] < 0 and self.y[i] < 0:
                 self.phi[i] = 180 - self.phi[i]
-            elif self.x[i] >= 0 and self.y[i] < 0:
+            elif self.x[i] > 0 and self.y[i] < 0:
                 self.phi[i] *= -1
-            elif self.x[i] < 0 and self.y[i] >= 0:
+            elif self.x[i] < 0 and self.y[i] > 0:
                 self.phi[i] += 180.0
 
             # create an array of the previous coordinates
@@ -138,25 +148,27 @@ class Discovery:
         j = 0
         while not self.aligned and not self.discoveryFailed:
             j = i % self.pointCount
+            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
+            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
             if i == 0:
-                self.servoY.start(self.translate(self.theta[j], 0, 180, 2.5, 12.5))
-                self.servoZ.start(self.translate(self.phi[j], 0, 180, 2.5, 12.5))
+                self.servoY.start(theta)
+                self.servoZ.start(phi)
             else:
-                # print("theta: {}, phi: {}".format(self.theta[j], self.phi[j]))
-                self.servoY.ChangeDutyCycle(self.translate(self.theta[j], 0, 180, 2.5, 12.5))
-                self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 2.5, 12.5))
+                self.servoY.ChangeDutyCycle(theta)
+                self.servoZ.ChangeDutyCycle(phi)
             # necessary since
             if self.mode == '1':
                 time.sleep(self.tranStep[j])
             elif self.mode == '0':
                 time.sleep(self.recStep[j])
             i += 1
-            
-        if self.discoveryFailed:
-            self.servoY.ChangeDutyCycle(12.5)
-            self.servoZ.ChangeDutyCycle(7.5)
-
-        #GPIO.cleanup()
+        print('1')
+        if not self.aligned == True:
+            print('2')
+            self.servoY.ChangeDutyCycle(self.translate((self.theta[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
+            self.servoZ.ChangeDutyCycle(self.translate((self.phi[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
+            print('3')
+        GPIO.cleanup()
 
     def setAligned(self):
         self.aligned = True

@@ -17,8 +17,8 @@ try:
         print(inp)
         angles = re.match(r'(\d+(\.\d+)?)\s+(\d+(\.\d+)?)', inp)
         print(angles.groups())
-        servoz.ChangeDutyCycle((float(angles.group(1))/18)+2.5)
-        servoy.ChangeDutyCycle((float(angles.group(3))/18)+2.5)
+        servoz.ChangeDutyCycle(float(angles.group(1)))
+        servoy.ChangeDutyCycle(float(angles.group(3)))
 except KeyboardInterrupt:
     servoz.ChangeDutyCycle((2.5))
     servoy.ChangeDutyCycle((2.5))
