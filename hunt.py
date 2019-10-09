@@ -67,6 +67,15 @@ def listenForSyn(op_time, id):
             print('[ listenForSyn ]: {}'.format(x))
             data = x.decode()
             print(data)
+            if data == '1':
+                str = ('2').encode()
+                ser.write(str)
+                print('sent ack in listenForSyn')
+                aligned = True
+                disc.setAligned()
+                print('Aligned!')
+                return
+            '''
             # if we got the expected syn (?)
             if len(data) == len(id):
                 # write the our id and syn+1 to other node
@@ -77,6 +86,7 @@ def listenForSyn(op_time, id):
                 disc.setAligned()
                 print('Aligned!')
                 return
+            '''
         except:
             pass
 
@@ -96,12 +106,18 @@ def listenForAck(beacon_time, id):
     # reset the input buffer
     #ser.reset_input_buffer()
     # read in the received values
-    x = ser.read((len(id)*2)+1)
+    x = ser.read(1)
     try:
         if len(x) > 0:
         # decode data
             print('[ listenForAck ]: {}'.format(x))
         data = x.decode()
+        if data == '2':
+            aligned = True
+            disc.setAligned()
+            print('Aligned!')
+            return
+        '''
         # convert string to array
         data = data.split(',')
         # check to make sure the data is the correct length
@@ -113,6 +129,7 @@ def listenForAck(beacon_time, id):
             disc.setAligned()
             print('Aligned!')
             return
+        '''
     except:
         pass
 
@@ -122,7 +139,7 @@ def sendSyn(beacon_time, id):
     # clear output buffer
     #ser.write_timeout = beacon_time
     #ser.reset_output_buffer()
-    str = ("{}".format(id)).encode()
+    str = ('1').encode()
     ser.write(str)
     ser.reset_input_buffer()
     ser.reset_output_buffer()
