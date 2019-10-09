@@ -61,7 +61,7 @@ def listenForSyn(op_time, id):
         # set the read timeout
         ser.timeout = end_time - time.time()
         # read the received data
-        x = ser.read(len(id))
+        x = ser.read()
         try:
             # decode data
             print('[ listenForSyn ]: {}'.format(x))
@@ -93,20 +93,11 @@ def listenForSyn(op_time, id):
 # listen for an ack response
 def listenForAck(beacon_time, id):
     global aligned
-    # set to true if we get an ACK
-    # we need this to prevent us from exiting early
-    end_time = time.time() + beacon_time
-    # initially the read time will be the beacon_time
-    # if we get garbage, the read time will be the
-    # difference of the end time and the current time
-    timeout = end_time - time.time()
-        
-    if (timeout > 0):
-        ser.timeout = timeout
+    ser.timeout = beacon_time
     # reset the input buffer
     #ser.reset_input_buffer()
     # read in the received values
-    x = ser.read(1)
+    x = ser.read()
     try:
         if len(x) > 0:
         # decode data
@@ -175,12 +166,13 @@ def handshake(disc, id):
             disc.changeMode(id[j])
             # repeatedly send syn and then listen for ack for op_time seconds
             while time.time() < slot_end_time and not aligned:
-                # send out a syn
-                sendSyn(beacon_time, id)
-                if time.time() + beacon_time > slot_end_time:
-                    ack_time = slot_end_time - time.time()
-                # listen for an ack in response
-                listenForAck(ack_time, id)
+                if slot_end_time - time.time() >= ack_time:
+                    # send out a syn
+                    sendSyn(beacon_time, id)
+                    # listen for an ack in response
+                    listenForAck(ack_time, id)
+                else:
+                    time.sleep(slot_end_time - time.time())
         # listen for syn
         elif id[j] == '0':
             # change mode to reception -> affects the angular velocity
