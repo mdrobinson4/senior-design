@@ -96,8 +96,9 @@ def listenForAck(beacon_time, id):
     # read in the received values
     x = ser.read((len(id)*2)+1)
     try:
+        if len(x) > 0:
         # decode data
-        print('[ listenForAck ]: {}'.format(x))
+            print('[ listenForAck ]: {}'.format(x))
         data = x.decode()
         # convert string to array
         data = data.split(',')
@@ -105,11 +106,11 @@ def listenForAck(beacon_time, id):
         if len(data) == 2:
                 
             # ensure we got the correct response
-            if data[1] == incBits(id):
-                aligned = True
-                disc.setAligned()
-                print('Aligned!')
-                return
+        #if data[1] == incBits(id):
+            aligned = True
+            disc.setAligned()
+            print('Aligned!')
+            return
     except:
         pass
     ser.reset_input_buffer()
