@@ -48,7 +48,7 @@ class Discovery:
 
         # time we spend in each mode [ each slot ]
         # Operation time = 2*p = 2*q rounds = (4*pi*q) / (Wt) = (4*pi*p) / (Wr)
-        self.pseudo_slot = (2*1.28*self.n*math.pi*self.q) / (self.wT)
+        self.pseudo_slot = (1.28*self.n*math.pi*self.q) / (self.wT)
         # amount of time that beacon lasts
         # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
         self.beacon_time = ((self.p*self.fullAngleDiv) + (self.q*self.fullAngleDiv) - (1.28*self.n*180)) / (8*self.q*self.wR)

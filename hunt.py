@@ -58,8 +58,6 @@ def listenForSyn(op_time, id):
     while time.time() < end_time and not aligned:
         # set the read timeout
         ser.timeout = end_time - time.time()
-        # reset the input buffer
-        ser.reset_input_buffer()
         # read the received data
         x = ser.read(len(id))
         try:
@@ -116,7 +114,7 @@ def listenForAck(beacon_time, id):
 def sendSyn(beacon_time, id):
     end_time = beacon_time + time.time()
     # clear output buffer
-    ser.write_timeout = beacon_time
+    #ser.write_timeout = beacon_time
     ser.reset_output_buffer()
     str = ("{}".format(id)).encode()
     ser.write(str)
@@ -140,6 +138,7 @@ def handshake(disc, id):
     # when the operation time ends
     op_time = disc.getPseudoSlotTime()
     # set write timeout since this is constant
+    ack_time = 0
     ser.write_timeout = beacon_time
     while j < len(id) and not aligned:
         j = i % len(id)
@@ -150,13 +149,19 @@ def handshake(disc, id):
             # change mode to transmission -> affects the angular velocity
             disc.changeMode(id[j])
             # repeatedly send syn and then listen for ack for op_time seconds
+            ser.reset_output_buffer()
+            ser.reset_input_buffer()
             while time.time() < slot_end_time and not aligned:
                 # send out a syn
                 sendSyn(beacon_time, id)
+                if time.time() + beacon_time > slot_end_time:
+                    ack_time = slot_end_time - time.time()
                 # listen for an ack in response
-                listenForAck(beacon_time, id)
+                listenForAck(ack_time, id)
         # listen for syn
         elif id[j] == '0':
+            ser.reset_input_buffer()
+            ser.reset_output_buffer()
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[j])
             # listen for an initial syn
