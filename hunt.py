@@ -163,7 +163,7 @@ def handshake(disc, id):
             disc.changeMode(id[j])
             # repeatedly send syn and then listen for ack for op_time seconds
             while time.time() < slot_end_time and not aligned:
-                if slot_end_time - time.time() >= 2*beacon_time:
+                if slot_end_time - time.time() >= beacon_time:
                     # send out a syn
                     sendSyn(beacon_time, id)
                     # listen for an ack in response
