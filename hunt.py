@@ -51,12 +51,13 @@ def incBits(bits):
 # listens for a syn
 def listenForSyn(op_time, id):
     global aligned
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
     # time when we will stop listening for syn
     end_time = op_time + time.time()
     # if we read garbage and there is time left
     # keep listening for syn
     while time.time() < end_time and not aligned:
-        ser.reset_input_buffer()
         # set the read timeout
         ser.timeout = end_time - time.time()
         # read the received data
@@ -65,6 +66,7 @@ def listenForSyn(op_time, id):
             # decode data
             print('[ listenForSyn ]: {}'.format(x))
             data = x.decode()
+            print(data)
             # if we got the expected syn (?)
             if len(data) == len(id):
                 # write the our id and syn+1 to other node
@@ -113,16 +115,17 @@ def listenForAck(beacon_time, id):
             return
     except:
         pass
-    ser.reset_input_buffer()
 
 # send syn
 def sendSyn(beacon_time, id):
     end_time = beacon_time + time.time()
     # clear output buffer
     #ser.write_timeout = beacon_time
-    ser.reset_output_buffer()
+    #ser.reset_output_buffer()
     str = ("{}".format(id)).encode()
     ser.write(str)
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
     #print('sent: {} in sendSyn'.format(str))
     # don't start listening for ack until you've waited beacon_time seconds
     # not sure if we need this (?)
@@ -159,15 +162,10 @@ def handshake(disc, id):
                 sendSyn(beacon_time, id)
                 if time.time() + beacon_time > slot_end_time:
                     ack_time = slot_end_time - time.time()
-                    # reset buffers
-                    ser.reset_output_buffer()
-                    ser.reset_input_buffer()
                 # listen for an ack in response
                 listenForAck(ack_time, id)
         # listen for syn
         elif id[j] == '0':
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[j])
             # listen for an initial syn
