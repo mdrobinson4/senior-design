@@ -88,9 +88,12 @@ def listenForAck(beacon_time, id):
         # initially the read time will be the beacon_time
         # if we get garbage, the read time will be the
         # difference of the end time and the current time
-        ser.timeout = end_time - time.time()
+        timeout = end_time - time.time()
+        
+        if (timeout > 0):
+            ser.timeout = timeout
         # reset the input buffer
-        ser.reset_input_buffer()
+        #ser.reset_input_buffer()
         # read in the received values
         x = ser.read((len(id)*2)+1)
         try:
@@ -110,6 +113,7 @@ def listenForAck(beacon_time, id):
                     break
         except:
             pass
+    ser.reset_input_buffer()
 
 # send syn
 def sendSyn(beacon_time, id):
