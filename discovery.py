@@ -83,7 +83,6 @@ class Discovery:
     def createPath(self):
         lin = np.linspace(-math.pi, math.pi, num=self.pointCount)
         p = 0
-        print(lin[1])
         for i in range(1, self.pointCount):
             p = math.cos(lin[i]/2)
             self.x[i] = p*math.sin(self.n*lin[i])
@@ -165,7 +164,6 @@ class Discovery:
             elif self.mode == '0':
                 time.sleep(self.recStep[j])
             i += 1
-        print('1')
         if not self.aligned == True:
             #self.servoY.ChangeDutyCycle(self.translate((self.theta[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
             #self.servoZ.ChangeDutyCycle(self.translate((self.phi[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))

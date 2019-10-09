@@ -91,7 +91,7 @@ def listenForAck(beacon_time, id):
         # difference of the end time and the current time
         ser.timeout = end_time - time.time()
         # reset the input buffer
-        ser.reset_input_buffer()
+        #ser.reset_input_buffer()
         # read in the received values
         x = ser.read((len(id)*2)+1)
         try:
