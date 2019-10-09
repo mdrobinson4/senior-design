@@ -19,9 +19,10 @@ ser = serial.Serial(
 
 send_time = 0
 total_time = 0
-start_time = time.time()
 
-ser.write(b'1')
+start_time = time.time()
+str = ('1').encode()
+ser.write(str)
 send_time = time.time() - start_time
 
 res = ser.read()
@@ -29,6 +30,5 @@ data = res.decode()
 
 total_time = time.time() - start_time
 
-print('It took [{}] seconds to send 1'.format(send_time))
+print('It took [{}] seconds to send [{}]'.format(send_time, str))
 print('It took [{}] seconds to receive [{}]'.format(total_time, data))
-
