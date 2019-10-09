@@ -84,35 +84,34 @@ def listenForAck(beacon_time, id):
     # set to true if we get an ACK
     # we need this to prevent us from exiting early
     end_time = time.time() + beacon_time
-    while time.time() < end_time:
-        # initially the read time will be the beacon_time
-        # if we get garbage, the read time will be the
-        # difference of the end time and the current time
-        timeout = end_time - time.time()
+    # initially the read time will be the beacon_time
+    # if we get garbage, the read time will be the
+    # difference of the end time and the current time
+    timeout = end_time - time.time()
         
-        if (timeout > 0):
-            ser.timeout = timeout
-        # reset the input buffer
-        #ser.reset_input_buffer()
-        # read in the received values
-        x = ser.read((len(id)*2)+1)
-        try:
-            # decode data
-            print('[ listenForAck ]: {}'.format(x))
-            data = x.decode()
-            # convert string to array
-            data = data.split(',')
-            # check to make sure the data is the correct length
-            if len(data) == 2:
+    if (timeout > 0):
+        ser.timeout = timeout
+    # reset the input buffer
+    #ser.reset_input_buffer()
+    # read in the received values
+    x = ser.read((len(id)*2)+1)
+    try:
+        # decode data
+        print('[ listenForAck ]: {}'.format(x))
+        data = x.decode()
+        # convert string to array
+        data = data.split(',')
+        # check to make sure the data is the correct length
+        if len(data) == 2:
                 
-                # ensure we got the correct response
-                if data[1] == incBits(id):
-                    aligned = True
-                    disc.setAligned()
-                    print('Aligned!')
-                    break
-        except:
-            pass
+            # ensure we got the correct response
+            if data[1] == incBits(id):
+                aligned = True
+                disc.setAligned()
+                print('Aligned!')
+                return
+    except:
+        pass
     ser.reset_input_buffer()
 
 # send syn
@@ -154,13 +153,14 @@ def handshake(disc, id):
             # change mode to transmission -> affects the angular velocity
             disc.changeMode(id[j])
             # repeatedly send syn and then listen for ack for op_time seconds
-            ser.reset_output_buffer()
-            ser.reset_input_buffer()
             while time.time() < slot_end_time and not aligned:
                 # send out a syn
                 sendSyn(beacon_time, id)
                 if time.time() + beacon_time > slot_end_time:
                     ack_time = slot_end_time - time.time()
+                    # reset buffers
+                    ser.reset_output_buffer()
+                    ser.reset_input_buffer()
                 # listen for an ack in response
                 listenForAck(ack_time, id)
         # listen for syn
