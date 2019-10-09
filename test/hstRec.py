@@ -22,14 +22,12 @@ ser = serial.Serial(
 start_start_time = 0
 send_time = 0
 
-#while (ser.in_waiting < 1):
 res = ser.read()
 data = res.decode()
 
 start_time = time.time()
-time.sleep(.1)
-ser.write(b'2')
+str = ('2').encode()
+ser.write(str)
 
 send_time = time.time() - start_time
-print('It took [{}] seconds to send 2'.format(send_time))
-
+print('It took [{}] seconds to send [{}]'.format(send_time, str))
