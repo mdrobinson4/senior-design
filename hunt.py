@@ -56,6 +56,7 @@ def listenForSyn(op_time, id):
     # if we read garbage and there is time left
     # keep listening for syn
     while time.time() < end_time and not aligned:
+        ser.reset_input_buffer()
         # set the read timeout
         ser.timeout = end_time - time.time()
         # read the received data
@@ -89,7 +90,7 @@ def listenForAck(beacon_time, id):
         # difference of the end time and the current time
         ser.timeout = end_time - time.time()
         # reset the input buffer
-        #ser.reset_input_buffer()
+        ser.reset_input_buffer()
         # read in the received values
         x = ser.read((len(id)*2)+1)
         try:
