@@ -51,7 +51,8 @@ class Discovery:
         self.pseudo_slot = (1.28*self.n*math.pi*self.q) / (self.wT)
         # amount of time that beacon lasts
         # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
-        self.beacon_time = ((self.p*self.fullAngleDiv) + (self.q*self.fullAngleDiv) - (1.28*self.n*math.pi)) / (8*self.q*self.wR)
+        #self.beacon_time = ((self.p*self.fullAngleDiv) + (self.q*self.fullAngleDiv) - (1.28*self.n*math.pi)) / (8*self.q*self.wR)
+        self.beacon_time = 0.007922887802124023
         print('Beacon Time: {}, Op Time: {}'.format(self.beacon_time, self.pseudo_slot))
         # Check Theorem 1
         # make sure that
