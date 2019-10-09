@@ -132,19 +132,21 @@ def sendSyn(beacon_time, id):
 # 2-way handshake
 def handshake(disc, id):
     i = 0
+    j = 0
     # get time constraints
     beacon_time = disc.getBeaconTime()
     # when the operation time ends
     op_time = disc.getPseudoSlotTime()
     # set write timeout since this is constant
     ser.write_timeout = beacon_time
-    while i < len(id) and not aligned:
+    while j < len(id) and not aligned:
+        j = i % len(id)
     #while 1 and not aligned:
         slot_end_time = op_time + time.time()
         # send syn and listen for ack
-        if id[i] == '1':
+        if id[j] == '1':
             # change mode to transmission -> affects the angular velocity
-            disc.changeMode(id[i])
+            disc.changeMode(id[j])
             # repeatedly send syn and then listen for ack for op_time seconds
             while time.time() < slot_end_time and not aligned:
                 # send out a syn
@@ -152,9 +154,9 @@ def handshake(disc, id):
                 # listen for an ack in response
                 listenForAck(beacon_time, id)
         # listen for syn
-        elif id[i] == '0':
+        elif id[j] == '0':
             # change mode to reception -> affects the angular velocity
-            disc.changeMode(id[i])
+            disc.changeMode(id[j])
             # listen for an initial syn
             listenForSyn(op_time, id)
         i += 1

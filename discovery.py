@@ -23,8 +23,8 @@ class Discovery:
         # initialize servos
         self.servoZ = GPIO.PWM(2, 50)
         self.servoY= GPIO.PWM(3, 50)
-        self.servoZ.ChangeDutyCycle(0)
-        self.servoY.ChangeDutyCycle(0)
+        #self.servoZ.ChangeDutyCycle(0)
+        #self.servoY.ChangeDutyCycle(0)
         #self.servoZ.start(0)
         #self.servoY.start(0)
 
@@ -100,15 +100,18 @@ class Discovery:
             self.theta[i] = math.degrees(math.acos(self.z[i] / r))
             # calculate phi the x-axis angle [ in degrees ]
             self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
-
+            
+            
             # needed since we can only rotate 180 degrees
             #self.phi[i] = self.translate(self.phi[i],-90,90,0,180)
+            
             if self.x[i] < 0 and self.y[i] < 0:
                 self.phi[i] = 180 - self.phi[i]
             elif self.x[i] > 0 and self.y[i] < 0:
                 self.phi[i] *= -1
             elif self.x[i] < 0 and self.y[i] > 0:
                 self.phi[i] += 180.0
+            
 
             # create an array of the previous coordinates
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
@@ -151,8 +154,8 @@ class Discovery:
             theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
             if i == 0:
-                self.servoY.start(theta)
-                self.servoZ.start(phi)
+                self.servoY.start(phi)
+                self.servoZ.start(theta)
             else:
                 self.servoY.ChangeDutyCycle(theta)
                 self.servoZ.ChangeDutyCycle(phi)
@@ -164,10 +167,9 @@ class Discovery:
             i += 1
         print('1')
         if not self.aligned == True:
-            print('2')
-            self.servoY.ChangeDutyCycle(self.translate((self.theta[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
-            self.servoZ.ChangeDutyCycle(self.translate((self.phi[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
-            print('3')
+            #self.servoY.ChangeDutyCycle(self.translate((self.theta[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
+            #self.servoZ.ChangeDutyCycle(self.translate((self.phi[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
+            time.sleep(1)
         GPIO.cleanup()
 
     def setAligned(self):
