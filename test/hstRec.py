@@ -15,18 +15,21 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
+    timeout=None,
+    write_timeout=None
 )
 
 start_start_time = 0
 send_time = 0
 
-while (ser.in_waiting < 0):
-  res = ser.read(1)
+#while (ser.in_waiting < 1):
+res = ser.read()
+data = res.decode()
 
-res = res.decode()
 start_time = time.time()
-str = '2'.encode()
+time.sleep(.1)
+ser.write(b'2')
 
-ser.write(str)
 send_time = time.time() - start_time
-print('It took [{}] seconds to send [{}]'.format(send_time, str))
+print('It took [{}] seconds to send 2'.format(send_time))
+
