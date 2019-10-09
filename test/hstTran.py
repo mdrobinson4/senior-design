@@ -17,15 +17,13 @@ ser = serial.Serial(
     bytesize=serial.EIGHTBITS,
 )
 
-start_time = time.time()
 send_time = 0
 total_time = 0
-
-str = ('1').encode()
+start_time = time.time()
 
 send_time = time.time()
+str = ('1').encode()
 ser.write(str)
-
 while (ser.in_waiting < 0):
   res = ser.read(1)
 res = res.decode()
