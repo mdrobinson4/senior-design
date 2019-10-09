@@ -2,7 +2,6 @@ import time
 import RPi.GPIO as GPIO
 import serial
 
-# NOTE: SEND = 1, LISTEN = 0
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -15,20 +14,21 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
+    timeout=None
 )
 
 send_time = 0
 total_time = 0
 start_time = time.time()
 
-send_time = time.time()
-str = ('1').encode()
-ser.write(str)
-while (ser.in_waiting < 0):
-  res = ser.read(1)
-res = res.decode()
+ser.write(b'1')
+send_time = time.time() - start_time
 
-total_time = time.time() - start_Time
+res = ser.read()
+data = res.decode()
 
-print('It took [{}] seconds to send [{}]'.format(send_time, str))
-print('It took [{}} seconds to receive [{}]'.format(total_time, res))
+total_time = time.time() - start_time
+
+print('It took [{}] seconds to send 1'.format(send_time))
+print('It took [{}] seconds to receive [{}]'.format(total_time, data))
+
