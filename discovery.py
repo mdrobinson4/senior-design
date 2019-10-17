@@ -22,43 +22,42 @@ class Discovery:
     def __init__(self):
         # initialize servos
         self.servoZ = GPIO.PWM(2, 50)
-        self.servoY = GPIO.PWM(3, 50)
-        self.servoZ.start(2.5)
-        self.servoY.start(2.5)
-        
-        self.aligned = False
-        self.mode = '0'
-        self.handshakeTime = 0
+        self.servoY= GPIO.PWM(3, 50)
+        #self.servoZ.ChangeDutyCycle(0)
+        #self.servoY.ChangeDutyCycle(0)
+        #self.servoZ.start(0)
+        #self.servoY.start(0)
 
+        self.aligned = False
+        self.discoveryFailed = False
+        self.mode = '0'
 
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
-        self.beta = 24
-        # width of coverage y
-        self.convWidth = (2**(1/2)) * math.radians(self.beta)
+        self.fullAngleDiv = 56
+        # width of convergence (y)
+        self.convWidth = (self.fullAngleDiv / 2) * math.sqrt(2)
         # number of rotations necessary to scan 3d area
-        self.n = math.pi / self.convWidth
-        print('n: {}', self.n)
-        return
-        
-        # reception angular velocity [ in degrees ]
-        self.wR = 900
-        # transmission angular velocity [ in degrees ]
-        self.wT = 400
+        self.n = 180 / self.convWidth
+        # transmission angular velocity [ degrees / second ]
+        self.wT = 130
+        # reception angular velocity [ degrees / second ]
+        self.wR = 110
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
-        
+
         # time we spend in each mode [ each slot ]
         # Operation time = 2*p = 2*q rounds = (4*pi*q) / (Wt) = (4*pi*p) / (Wr)
-        self.op_time = (2*1.28*self.n*math.pi*self.q) / math.radians(self.wT)
+        self.pseudo_slot = (2*1.28*self.n*180*self.q) / (self.wT)
         # amount of time that beacon lasts
         # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
-        self.beacon_time = ((self.beta*(self.p + self.q)) - (1.28*self.n*math.pi)) / (8*self.q*self.wR)
-        print('Beacon Time: {}, Op Time: {}'.format(self.beacon_time, self.op_time))
+        #self.beacon_time = ((self.p*self.fullAngleDiv) + (self.q*self.fullAngleDiv) - (1.28*self.n*math.pi)) / (8*self.q*self.wR)
+        self.beacon_time = 0.007922887802124023
+        print('Beacon Time: {}, Op Time: {}'.format(self.beacon_time, self.pseudo_slot))
         # Check Theorem 1
-        print('{} > {}'.format((self.p*math.radians(self.beta))+(self.q*math.radians(self.beta)), 1.28*self.n*math.pi))
-       
-        
+        # make sure that
+        print('{} > {}'.format(self.fullAngleDiv*(self.p+self.q), 1.28*self.n*180))
+
         # resolution
         self.pointCount = 1000
         # steps -> will be used to determine how long the servo will
@@ -77,17 +76,24 @@ class Discovery:
         self.x = np.zeros(self.pointCount)
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
+        #self.p = np.zeros(self.pointCount)
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
-    
+
     # sets the path that the servo will take
     def createPath(self):
+        lin = np.linspace(-math.pi, math.pi, num=self.pointCount)
+        p = 0
         for i in range(1, self.pointCount):
+            p = math.cos(lin[i]/2)
+            self.x[i] = p*math.sin(self.n*lin[i])
+            self.y[i] = p*math.cos(self.n*lin[i])
+            self.z[i] = math.sin(lin[i]/2)
             # calculate the new x, y, and z values
-            self.x[i] = math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
-            self.y[i] = math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
-            self.z[i] = math.sin(self.s[i] / 2)
-            
+            #self.x[i] = math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
+            #self.y[i] = math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
+            #self.z[i] = math.sin(self.s[i] / 2)
+
             # calculate the radius of the sphere
             r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)**(1/2)
             # calculate theta the z-axis angle [ in degrees ]
@@ -95,15 +101,18 @@ class Discovery:
             # calculate phi the x-axis angle [ in degrees ]
             self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
             
+            
             # needed since we can only rotate 180 degrees
-            # still not fully confident about this part
-            if self.x[i]<0 and self.y[i]<0:
+            #self.phi[i] = self.translate(self.phi[i],-90,90,0,180)
+            
+            if self.x[i] < 0 and self.y[i] < 0:
                 self.phi[i] = 180 - self.phi[i]
-            elif self.x[i] >= 0 and self.y[i] < 0:
+            elif self.x[i] > 0 and self.y[i] < 0:
                 self.phi[i] *= -1
-            elif self.x[i] < 0 and self.y[i] >= 0:
+            elif self.x[i] < 0 and self.y[i] > 0:
                 self.phi[i] += 180.0
-                
+            
+
             # create an array of the previous coordinates
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
             # create an array of the current coordinates
@@ -140,30 +149,36 @@ class Discovery:
     def scan(self):
         i = 0
         j = 0
-        while not self.aligned:
+        while not self.aligned and not self.discoveryFailed:
             j = i % self.pointCount
-            # print("theta: {}, phi: {}".format(self.theta[j], self.phi[j]))
-            self.servoY.ChangeDutyCycle(self.translate(self.theta[j], 0, 180, 0, 12.5))
-            self.servoZ.ChangeDutyCycle(self.translate(self.phi[j], 0, 180, 0, 12.5))
+            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
+            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
+            if i == 0:
+                self.servoY.start(phi)
+                self.servoZ.start(theta)
+            else:
+                self.servoY.ChangeDutyCycle(theta)
+                self.servoZ.ChangeDutyCycle(phi)
             # necessary since
             if self.mode == '1':
                 time.sleep(self.tranStep[j])
             elif self.mode == '0':
                 time.sleep(self.recStep[j])
             i += 1
-        self.servoY.ChangeDutyCycle(7.5)
-        self.servoZ.ChangeDutyCycle(7.5)
-        
-        #GPIO.cleanup()
+        if not self.aligned == True:
+            #self.servoY.ChangeDutyCycle(self.translate((self.theta[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
+            #self.servoZ.ChangeDutyCycle(self.translate((self.phi[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
+            time.sleep(1)
+        GPIO.cleanup()
 
     def setAligned(self):
         self.aligned = True
-    
+
     def changeMode(self, mode):
         self.mode = mode
-    
-    def getOpTime(self):
-        return self.op_time
-    
+
+    def getPseudoSlotTime(self):
+        return self.pseudo_slot
+
     def getBeaconTime(self):
         return self.beacon_time

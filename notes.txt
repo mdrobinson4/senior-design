@@ -1,0 +1,2 @@
+total handshake time (1 Byte) = 0.007922887802124023 seconds
+send time (1 Byte) = 0.000164031982421875

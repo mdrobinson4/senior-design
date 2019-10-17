@@ -9,7 +9,7 @@ def checkPrime(x):
         return False
     return True
 
-theta = (48)
+theta = (56)
 # half angle divergence
 beta = (24)
 
@@ -23,3 +23,4 @@ for p in range(0,100):
     if p != q and checkPrime(p) and checkPrime(q) and (theta)*(p+q) > (1.28*n*180):
       x.append([p, q])
 print(x)
+
