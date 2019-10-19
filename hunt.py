@@ -49,22 +49,33 @@ def incBits(bits):
     return '{:03b}'.format(x)
 
 # listens for a syn
-def listenForSyn(op_time, id, disc):
+def listenForSyn(op_time, beacon_time, id, disc):
     global aligned
     # time when we will stop listening for syn
     end_time = op_time + time.time()
-    # set flag to zero if we are currently scanning the "back"
-    flag = disc.checkFront()
-    while flag == 0 and time.time() < end_time:
-        flag = disc.checkFront()
+    beacon_end = beacon_time + time.time()
+    
     # reset buffers
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
     # keep listening for syn
     while time.time() < end_time and not aligned:
-        # set the read timeout
-        ser.timeout = end_time - time.time()
+        # set flag to zero if we are currently scanning the "back"
+        flag = disc.checkFront()
+        while flag == 0 and time.time() < end_time:
+            # reset buffers
+            ser.reset_input_buffer()
+            flag = disc.checkFront()
+        # exit if we don't have time left
+        if time.time() >= end_time:
+            return
+        # set the read timeout to the beacon time
+        if time.time() + beacon_time >= beacon_end:
+            ser.timeout = beacon_end - time.time()
+        else:
+            ser.timeout = beacon_time
+            
         # read the received data
         x = ser.read()
         try:
@@ -181,7 +192,7 @@ def handshake(disc, id):
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[j])
             # listen for an initial syn
-            listenForSyn(op_time, id, disc)
+            listenForSyn(op_time, beacon_time, id, disc)
         i += 1
     # the 3d area was fully scanned, but we still failed to find the other node
     if not aligned:
