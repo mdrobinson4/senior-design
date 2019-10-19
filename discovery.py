@@ -166,6 +166,9 @@ class Discovery:
         if not self.aligned == True:
             GPIO.cleanup()
     
+    def checkFront(self):
+        return self.frontFlag
+    
     def setAligned(self):
         self.aligned = True
 
