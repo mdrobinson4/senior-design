@@ -49,13 +49,18 @@ def incBits(bits):
     return '{:03b}'.format(x)
 
 # listens for a syn
-def listenForSyn(op_time, id):
+def listenForSyn(op_time, id, disc):
     global aligned
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
     # time when we will stop listening for syn
     end_time = op_time + time.time()
-    # if we read garbage and there is time left
+    # set flag to zero if we are currently scanning the "back"
+    flag = disc.checkFront()
+    while flag == 0 and time.time() < end_time:
+        flag = disc.checkFront()
+    # reset buffers
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
+
     # keep listening for syn
     while time.time() < end_time and not aligned:
         # set the read timeout
@@ -91,11 +96,19 @@ def listenForSyn(op_time, id):
             pass
 
 # listen for an ack response
-def listenForAck(beacon_time, id):
+def listenForAck(beacon_time, id, disc):
     global aligned
-    ser.timeout = beacon_time
-    # reset the input buffer
-    #ser.reset_input_buffer()
+    # at (end_time) we will exit
+    end_time = time.time() + beacon_time
+    # set flag to zero if servo not in positive plane
+    flag = disc.checkFront()
+    while flag == 0 and time.time() < end_time
+        flag = disc.checkFront()
+    # exit if we timed out
+    if time.time >= end_time:
+        break
+    # how long we will wait for the byte(s)
+    ser.timeout = end_time - time.time()
     # read in the received values
     x = ser.read()
     try:
@@ -136,22 +149,15 @@ def sendSyn(beacon_time, id):
     ser.reset_output_buffer()
     #print('sent: {} in sendSyn'.format(str))
     # don't start listening for ack until you've waited beacon_time seconds
-    # not sure if we need this (?)
-    
-    '''
-    if time.time() < end_time:
-        sleep_time = end_time - time.time()
-        time.sleep(sleep_time)
-    '''
     
 
 # 2-way handshake
 def handshake(disc, id):
     i = 0
     j = 0
-    # get time constraints
+    # how long it takes to send and receive byte(s)
     beacon_time = disc.getBeaconTime()
-    # when the operation time ends
+    # length of a slot
     op_time = disc.getPseudoSlotTime()
    
     while j < len(id) and not aligned:
@@ -167,7 +173,7 @@ def handshake(disc, id):
                     # send out a syn
                     sendSyn(beacon_time, id)
                     # listen for an ack in response
-                    listenForAck(beacon_time, id)
+                    listenForAck(beacon_time, id, disc)
                 else:
                     time.sleep(slot_end_time - time.time())
         # listen for syn
@@ -175,7 +181,7 @@ def handshake(disc, id):
             # change mode to reception -> affects the angular velocity
             disc.changeMode(id[j])
             # listen for an initial syn
-            listenForSyn(op_time, id)
+            listenForSyn(op_time, id, disc)
         i += 1
     # the 3d area was fully scanned, but we still failed to find the other node
     if not aligned:
