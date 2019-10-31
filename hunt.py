@@ -62,8 +62,8 @@ def listenForSyn(op_time, beacon_time, id, disc):
         while flag == 0 and time.time() < end_time:
             # reset buffers
             flag = disc.checkFront()
-        ser.reset_input_buffer()
-        ser.reset_output_buffer()
+            ser.reset_input_buffer()
+            ser.reset_output_buffer()
         # exit if we don't have time left
         if time.time() >= end_time:
             return

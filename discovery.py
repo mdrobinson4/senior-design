@@ -186,8 +186,6 @@ class Discovery:
             else:
                 return 0
 
-
-
     def checkFront(self):
         if self.mode == '1':
             return self.frontFlagTran
