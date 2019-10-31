@@ -79,7 +79,6 @@ def listenForSyn(op_time, beacon_time, id, disc):
         x = ser.read(5) # wait for synchronous signal ('hello')
         try:
             # decode data
-            print('[ listenForSyn ]: {}'.format(x))
             data = x.decode()
             print(data)
             if data == 'hello':
@@ -112,6 +111,7 @@ def listenForAck(beacon_time, id, disc):
     # constantly check to see if we facing the front
     while flag == 0 and time.time() < end_time:
         flag = disc.checkFront()
+        print('back')
         #ser.reset_input_buffer() # reset input buffer
     # exit if we timed out
     if time.time() >= end_time:
