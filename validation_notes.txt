@@ -22,3 +22,5 @@ These angular velocities are determined arbitrarily, but must meet the following
 Note: Our servos have a maximum speed of around 315 degrees / second. So this was our speed limit
 I created the script "vel.py" to give us the different possible p and q values. Which we then used to get the possible angular velocities.
 I selected the values: Wt = 300, Wr = 290.
+
+Our servos can only rotate 180 degrees...

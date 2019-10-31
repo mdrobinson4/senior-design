@@ -26,8 +26,6 @@ ser = serial.Serial(
     timeout=0
 )
 
-print(ser.name)
-
 aligned = False
 
 # convert text to bits
@@ -48,21 +46,21 @@ def incBits(bits):
     x = int(bits, 2) + int('0001', 2)
     return '{:03b}'.format(x)
 
-# listens for a syn
+# listen for synchronous signal
 def listenForSyn(op_time, beacon_time, id, disc):
     global aligned
     # time when we will stop listening for syn
     end_time = op_time + time.time()
     beacon_end = beacon_time + time.time()
-    
+
     # reset buffers
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
-    # keep listening for syn
+    # keep listening for syn until we run out of time
     while time.time() < end_time and not aligned:
-        # set flag to zero if we are currently scanning the "back"
         flag = disc.checkFront()
+        # check to see if we are facingthe front
         while flag == 0 and time.time() < end_time:
             # reset buffers
             ser.reset_input_buffer()
@@ -70,14 +68,13 @@ def listenForSyn(op_time, beacon_time, id, disc):
         # exit if we don't have time left
         if time.time() >= end_time:
             return
-        # set the read timeout to the beacon time
+        # set the read timeout to the handshake time
         if time.time() + beacon_time >= end_time:
             ser.timeout = end_time - time.time()
         else:
             ser.timeout = beacon_time
-            
-        # read the received data
-        x = ser.read()
+
+        x = ser.read(5) # wait for synchronous signal ('hello')
         try:
             # decode data
             print('[ listenForSyn ]: {}'.format(x))
@@ -85,7 +82,6 @@ def listenForSyn(op_time, beacon_time, id, disc):
             print(data)
             if data == 'hello':
                 ser.write(('ack').encode())
-                print('sent ack in listenForSyn')
                 aligned = True
                 disc.setAligned()
                 print('Aligned!')
@@ -109,24 +105,21 @@ def listenForSyn(op_time, beacon_time, id, disc):
 def listenForAck(beacon_time, id, disc):
     global aligned
     # at (end_time) we will exit
-    end_time = time.time() + beacon_time
-    # set flag to zero if servo not in positive plane
-    flag = disc.checkFront()
+    end_time = time.time() + beacon_time # when we will leave stop listening for acknowledgement
+    flag = disc.checkFront() # check to see if we are facing front
+    # constantly check to see if we facing the front
     while flag == 0 and time.time() < end_time:
         flag = disc.checkFront()
+        ser.reset_input_buffer() # reset input buffer
     # exit if we timed out
     if time.time >= end_time:
         return
-    # how long we will wait for the byte(s)
-    ser.timeout = end_time - time.time()
-    # read in the received values
-    x = ser.read()
+    ser.timeout = end_time - time.time() # receive timeout
+    x = ser.read(3) # read in ('ack') from other node
+    # decode data and see if it is what we were expecting: ('ack')
     try:
-        if len(x) > 0:
-        # decode data
-            print('[ listenForAck ]: {}'.format(x))
         data = x.decode()
-        if data == '2':
+        if data == 'ack':
             aligned = True
             disc.setAligned()
             print('Aligned!')
@@ -136,7 +129,7 @@ def listenForAck(beacon_time, id, disc):
         data = data.split(',')
         # check to make sure the data is the correct length
         if len(data) == 2:
-                
+
             # ensure we got the correct response
         #if data[1] == incBits(id):
             aligned = True
@@ -147,45 +140,35 @@ def listenForAck(beacon_time, id, disc):
     except:
         pass
 
-# send syn
+# send synchronous signal
 def sendSyn(beacon_time, id):
-    end_time = beacon_time + time.time()
-    # clear output buffer
-    #ser.write_timeout = beacon_time
-    #ser.reset_output_buffer()
-    str = ('1').encode()
-    ser.write(str)
+    ser.write(('hello').encode())   # send synchronous signal to other node
+    # reset the buffers
     ser.reset_input_buffer()
     ser.reset_output_buffer()
-    #print('sent: {} in sendSyn'.format(str))
-    # don't start listening for ack until you've waited beacon_time seconds
-    
+    # print('sent: {} in sendSyn'.format(str))
+
 
 # 2-way handshake
 def handshake(disc, id):
     i = 0
     j = 0
-    # how long it takes to send and receive byte(s)
-    beacon_time = disc.getBeaconTime()
-    # length of a slot
-    op_time = disc.getPseudoSlotTime()
-   
-    while j < len(id) and not aligned:
+    beacon_time = disc.getBeaconTime() # handshake time
+    op_time = disc.getPseudoSlotTime() # slot time
+
+    while j < len(id) and not aligned: # loop through pseudo slot sequence until we're aligned
         j = i % len(id)
-        slot_end_time = op_time + time.time()
-        # send syn and listen for ack
-        if id[j] == '1':
-            # change mode to transmission -> affects the angular velocity
-            disc.changeMode(id[j])
+        slot_end_time = op_time + time.time() # when the slot will end
+        if id[j] == '1': # mode 1 -> transmission mode
+            disc.changeMode(id[j]) # change mode to transmission -> change angular velocity to 300 deg / sec
             # repeatedly send syn and then listen for ack for op_time seconds
             while time.time() < slot_end_time and not aligned:
+                # only go through process if we have enough time to get a response
                 if slot_end_time - time.time() >= beacon_time:
-                    # send out a syn
-                    sendSyn(beacon_time, id)
-                    # listen for an ack in response
-                    listenForAck(beacon_time, id, disc)
+                    sendSyn(beacon_time, id) # send synchronous signal
+                    listenForAck(beacon_time, id, disc) # wait for response
                 else:
-                    time.sleep(slot_end_time - time.time())
+                    time.sleep(slot_end_time - time.time()) # sleep for the remaining time
         # listen for syn
         elif id[j] == '0':
             # change mode to reception -> affects the angular velocity

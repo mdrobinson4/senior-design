@@ -44,11 +44,9 @@ class Discovery:
 
         # time we spend in each mode [ each slot ]
         self.pseudo_slot = (2*1.28*self.n*180*self.q) / (self.wT)
-        # amount of time that beacon lasts
-        # average handshake time
+        # average handshake time (100 tests)
         self.beacon_time = 0.00842599630355835
         print('handshake time: {}, pseudo slot time: {}'.format(self.beacon_time, self.pseudo_slot))
-        #
         print('{} > {}'.format(self.fullAngleDiv*(self.p+self.q), 1.28*self.n*180))
 
         # resolution
