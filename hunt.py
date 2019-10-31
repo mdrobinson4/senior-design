@@ -112,7 +112,7 @@ def listenForAck(beacon_time, id, disc):
     # constantly check to see if we facing the front
     while flag == 0 and time.time() < end_time:
         flag = disc.checkFront()
-        ser.reset_input_buffer() # reset input buffer
+        #ser.reset_input_buffer() # reset input buffer
     # exit if we timed out
     if time.time() >= end_time:
         return
