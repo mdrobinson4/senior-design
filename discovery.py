@@ -147,7 +147,7 @@ class Discovery:
         while not self.aligned and not self.discoveryFailed:
             j = i % (self.pointCount*2)
             self.frontFlagTran = self.getStatus(j) # set the front flag so the handshake code can access it
-            self.frontFlagRec = status[j] # set the front flag so the handshake code can access it
+            self.frontFlagRec = self.status[j] # set the front flag so the handshake code can access it
             theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the theta value (z axis)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the phi value (x,y axis)
             if i == 0:  # if we're just starting
