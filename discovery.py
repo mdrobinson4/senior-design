@@ -91,14 +91,14 @@ class Discovery:
 
             # needed since we can only rotate 180 degrees
             if self.x[i] < 0 and self.y[i] < 0:
+                print(self.phi[i])
                 self.phi[i] = 180 - self.phi[i]
-                print(self.phi[i])
             elif self.x[i] > 0 and self.y[i] < 0:
+                print(self.phi[i])
                 self.phi[i] *= -1
-                print(self.phi[i])
             elif self.x[i] < 0 and self.y[i] > 0:
-                self.phi[i] += 180.0
                 print(self.phi[i])
+                self.phi[i] += 180.0
             else:
                 self.status[i] = 1  # facing the front, not the back
 
