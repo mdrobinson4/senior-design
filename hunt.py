@@ -80,7 +80,6 @@ def listenForSyn(op_time, beacon_time, id, disc):
         try:
             # decode data
             data = x.decode()
-            print(data)
             if data == 'hello':
                 ser.write(('ack').encode())
                 aligned = True
@@ -112,6 +111,7 @@ def listenForAck(beacon_time, id, disc):
     while flag == 0 and time.time() < end_time:
         flag = disc.checkFront()
         print('back')
+    print('front')
         #ser.reset_input_buffer() # reset input buffer
     # exit if we timed out
     if time.time() >= end_time:
