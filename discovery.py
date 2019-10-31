@@ -91,13 +91,10 @@ class Discovery:
 
             # needed since we can only rotate 180 degrees
             if self.x[i] < 0 and self.y[i] < 0:
-                print(self.phi[i])
                 self.phi[i] = 180 - self.phi[i]
             elif self.x[i] > 0 and self.y[i] < 0:
-                print(self.phi[i])
                 self.phi[i] *= -1
             elif self.x[i] < 0 and self.y[i] > 0:
-                print(self.phi[i])
                 self.phi[i] += 180.0
             else:
                 self.status[i] = 1  # facing the front, not the back
@@ -147,7 +144,7 @@ class Discovery:
         j = 0
         while not self.aligned and not self.discoveryFailed:
             j = i % (self.pointCount*2)
-            self.frontFlag = self.status[j] # set the front flag so the handshake code can access it
+            self.frontFlag = self.getStatus(j) # set the front flag so the handshake code can access it
             theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the theta value (z axis)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the phi value (x,y axis)
             if i == 0:  # if we're just starting
@@ -164,6 +161,26 @@ class Discovery:
             i += 1
         if not self.aligned == True:
             GPIO.cleanup()
+
+    def getStatus(self, pos):
+        # return 0 if we are currently in the back
+        if self.status[pos] == 0:
+            return 0
+        # if we are currently in the front, see how long we will remain in the front
+        elif self.status[pos] == 1:
+            i = pos
+            timeTilBack = 0
+            # how long will we remain in the front
+            while self.status[i] == 1:
+                timeTilBack += self.tranStep[i]
+                i += 1
+            # we will remain in the front long enough to complete handshake
+            if timeTilBack > self.beacon_time:
+                return 1
+            else:
+                return 0
+
+
 
     def checkFront(self):
         return self.frontFlag
