@@ -69,7 +69,8 @@ class Discovery:
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.status = np.zeros(self.pointCount)
-        self.frontFlag = 1
+        self.frontFlagTran = 0
+        self.frontFlagRec = 0
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
@@ -145,7 +146,8 @@ class Discovery:
         j = 0
         while not self.aligned and not self.discoveryFailed:
             j = i % (self.pointCount*2)
-            self.frontFlag = self.getStatus(j) # set the front flag so the handshake code can access it
+            self.frontFlagTran = self.getStatus(j) # set the front flag so the handshake code can access it
+            self.frontFlagRec = status[j] # set the front flag so the handshake code can access it
             theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the theta value (z axis)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the phi value (x,y axis)
             if i == 0:  # if we're just starting
@@ -173,7 +175,10 @@ class Discovery:
             timeTilBack = 0
             # how long will we remain in the front
             while self.status[i] == 1:
-                timeTilBack += self.recStep[i]
+                if self.mode == '1':
+                    timeTilBack += self.tranStep[i]
+                else:
+                    timeTilBack += self.recStep[i]
                 i += 1
             # we will remain in the front long enough to complete handshake
             if timeTilBack > self.beacon_time + self.send_time:
@@ -181,8 +186,13 @@ class Discovery:
             else:
                 return 0
 
+
+
     def checkFront(self):
-        return self.frontFlag
+        if self.mode == '1':
+            return self.frontFlagTran
+        else:
+            return self.frontFlagRec
 
     def setAligned(self):
         self.aligned = True
