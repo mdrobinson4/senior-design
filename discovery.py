@@ -181,7 +181,7 @@ class Discovery:
                     timeTilBack += self.recStep[i]
                 i += 1
             # we will remain in the front long enough to complete handshake
-            if timeTilBack > self.beacon_time + self.send_time:
+            if timeTilBack > 2*self.beacon_time:
                 return 1
             else:
                 return 0
