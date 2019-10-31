@@ -55,18 +55,15 @@ def listenForSyn(op_time, beacon_time, id, disc):
     end_time = op_time + time.time()
     beacon_end = beacon_time + time.time()
 
-    # reset buffers
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
-
     # keep listening for syn until we run out of time
     while time.time() < end_time and not aligned:
         flag = disc.checkFront()
         # check to see if we are facingthe front
         while flag == 0 and time.time() < end_time:
             # reset buffers
-            ser.reset_input_buffer()
             flag = disc.checkFront()
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
         # exit if we don't have time left
         if time.time() >= end_time:
             return
@@ -106,14 +103,6 @@ def listenForAck(beacon_time, id, disc):
     global aligned
     # at (end_time) we will exit
     end_time = time.time() + beacon_time # when we will leave stop listening for acknowledgement
-    flag = disc.checkFront() # check to see if we are facing front
-    # constantly check to see if we facing the front
-    while flag == 0 and time.time() < end_time:
-        flag = disc.checkFront()
-        print('back')
-    print('front')
-        #ser.reset_input_buffer() # reset input buffer
-    # exit if we timed out
     if time.time() >= end_time:
         return
     ser.timeout = end_time - time.time() # receive timeout
@@ -165,12 +154,16 @@ def handshake(disc, id):
             disc.changeMode(id[j]) # change mode to transmission -> change angular velocity to 300 deg / sec
             # repeatedly send syn and then listen for ack for op_time seconds
             while time.time() < slot_end_time and not aligned:
+                flag = disc.checkFront() # check to see if we are facing front
+                # constantly check to see if we facing the front
+                while flag == 0 and time.time() < slot_end_time:
+                    flag = disc.checkFront()
                 # only go through process if we have enough time to get a response
                 if slot_end_time - time.time() >= beacon_time:
                     sendSyn(beacon_time, id) # send synchronous signal
                     listenForAck(beacon_time, id, disc) # wait for response
-                else:
-                    time.sleep(slot_end_time - time.time()) # sleep for the remaining time
+                elif slot_end_time - time.time() > 0:   # sleep for the remaining time
+                    time.sleep(slot_end_time - time.time())
         # listen for syn
         elif id[j] == '0':
             # change mode to reception -> affects the angular velocity
