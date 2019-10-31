@@ -71,8 +71,8 @@ def listenForSyn(op_time, beacon_time, id, disc):
         if time.time() >= end_time:
             return
         # set the read timeout to the beacon time
-        if time.time() + beacon_time >= beacon_end:
-            ser.timeout = beacon_end - time.time()
+        if time.time() + beacon_time >= end_time:
+            ser.timeout = end_time - time.time()
         else:
             ser.timeout = beacon_time
             
@@ -83,9 +83,8 @@ def listenForSyn(op_time, beacon_time, id, disc):
             print('[ listenForSyn ]: {}'.format(x))
             data = x.decode()
             print(data)
-            if data == '1':
-                str = ('2').encode()
-                ser.write(str)
+            if data == 'hello':
+                ser.write(('ack').encode())
                 print('sent ack in listenForSyn')
                 aligned = True
                 disc.setAligned()
@@ -113,11 +112,11 @@ def listenForAck(beacon_time, id, disc):
     end_time = time.time() + beacon_time
     # set flag to zero if servo not in positive plane
     flag = disc.checkFront()
-    while flag == 0 and time.time() < end_time
+    while flag == 0 and time.time() < end_time:
         flag = disc.checkFront()
     # exit if we timed out
     if time.time >= end_time:
-        break
+        return
     # how long we will wait for the byte(s)
     ser.timeout = end_time - time.time()
     # read in the received values
