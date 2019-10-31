@@ -1,0 +1,24 @@
+total handshake time  = 0.00842599630355835 seconds ('hello' + 'ack')
+send time = 0.00006556272506713867 seconds ('hello')
+
+To determine the handshake time we set up the client node so that it sent a synchronous signal ('hello') to the server node.
+Once the server node received the signal it sent an acknowledgement ('ack'). The total handshake time would be the time
+that it took for the client to send the synchronous signal plus the time that it took to receive the acknowledgement from
+the server. We also measured the time that it takes for the client node to send the synchronous signal ('hello') to the server.
+We performed this operation 100 times and calculated the average values.
+
+Our transceivers have a full divergence of 56 degrees. Divergence refers to the angular measure of the increase of the beam diameter
+as it propagates from the transceiver. We used the half angle divergence (56/2) to calculate the transceiver's width of coverage.
+We used the half angle divergence since it is the angle where the signal is strongest.
+[width-of-coverage = sqrt(2) * half-angle-divergence] = 39.598 degrees
+
+We then used the width of coverage to calculate the number of rotations necessary to scan the 360 degree area.
+[rotation-count = 180 / width-of-coverage] = 4.54569 times
+
+The steering mechanisms have different angular velocities for transmission and reception modes.
+These angular velocities are determined arbitrarily, but must meet the following conditions:
+[ Wr / Wt = p / q ] (where Wr and Wt are the reception and transmission angular velocity. Also, p != q and both are prime numbers)
+[ (p)*(full-divergence) + q(full-beamwidth) > (1.28 * rotation-count * pi) ]
+Note: Our servos have a maximum speed of around 315 degrees / second. So this was our speed limit
+I created the script "vel.py" to give us the different possible p and q values. Which we then used to get the possible angular velocities.
+I selected the values: Wt = 300, Wr = 290.

@@ -31,25 +31,24 @@ class Discovery:
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
         self.fullAngleDiv = 56
-        # width of convergence (y)
-        self.convWidth = (self.fullAngleDiv / 2) * math.sqrt(2)
+        # width of coverage (y)
+        self.covWidth = (self.fullAngleDiv / 2) * math.sqrt(2)
         # number of rotations necessary to scan 3d area
-        self.n = 180 / self.convWidth
+        self.n = 180 / self.covWidth
         # transmission angular velocity [ degrees / second ]
-        self.wT = 130
+        self.wT = 300
         # reception angular velocity [ degrees / second ]
-        self.wR = 110
+        self.wR = 290
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
 
         # time we spend in each mode [ each slot ]
         self.pseudo_slot = (2*1.28*self.n*180*self.q) / (self.wT)
         # amount of time that beacon lasts
-        # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
-        self.beacon_time = 0.007922887802124023
-        print('Beacon Time: {}, Op Time: {}'.format(self.beacon_time, self.pseudo_slot))
-        # Check Theorem 1
-        # make sure that
+        # average handshake time
+        self.beacon_time = 0.00842599630355835
+        print('handshake time: {}, pseudo slot time: {}'.format(self.beacon_time, self.pseudo_slot))
+        #
         print('{} > {}'.format(self.fullAngleDiv*(self.p+self.q), 1.28*self.n*180))
 
         # resolution
@@ -59,10 +58,10 @@ class Discovery:
         # between two consecutive angles will not be equal. Which is not
         # preferred since we want the angular speed to be constant, for now
         self.steps = np.zeros(self.pointCount)
-        
+
         self.theta = np.zeros(self.pointCount)
         self.phi = np.zeros(self.pointCount)
-        
+
         self.tranStep = np.zeros(self.pointCount)
         self.recStep = np.zeros(self.pointCount)
 
@@ -91,8 +90,8 @@ class Discovery:
             self.theta[i] = math.degrees(math.acos(self.z[i] / r))
             # calculate phi the x-axis angle [ in degrees ]
             self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
-            
-    
+
+
             # needed since we can only rotate 180 degrees
             if self.x[i] < 0 and self.y[i] < 0:
                 self.phi[i] = 180 - self.phi[i]
@@ -101,8 +100,8 @@ class Discovery:
             elif self.x[i] < 0 and self.y[i] > 0:
                 self.phi[i] += 180.0
             else:
-                self.status[i] = 1
-            
+                self.status[i] = 1  # facing the front, not the back
+
             # create an array of the previous coordinates
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
             # create an array of the current coordinates
@@ -141,17 +140,17 @@ class Discovery:
         valueScaled = float(value - leftMin) / float(leftSpan)
         # Convert the 0-1 range into a value in the right range.
         return rightMin + (valueScaled * rightSpan)
-    
+
 
     def scan(self):
         i = 0
         j = 0
         while not self.aligned and not self.discoveryFailed:
             j = i % (self.pointCount*2)
-            self.frontFlag = self.status[j]
-            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
-            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
-            if i == 0:
+            self.frontFlag = self.status[j] # set the front flag so the handshake code can access it
+            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the theta value (z axis)
+            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the phi value (x,y axis)
+            if i == 0:  # if we're just starting
                 self.servoY.start(phi)
                 self.servoZ.start(theta)
             else:
@@ -165,10 +164,10 @@ class Discovery:
             i += 1
         if not self.aligned == True:
             GPIO.cleanup()
-    
+
     def checkFront(self):
         return self.frontFlag
-    
+
     def setAligned(self):
         self.aligned = True
 
@@ -180,4 +179,3 @@ class Discovery:
 
     def getBeaconTime(self):
         return self.beacon_time
-
