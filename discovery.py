@@ -46,7 +46,7 @@ class Discovery:
         self.pseudo_slot = (2*1.28*self.n*180*self.q) / (self.wT)
         # average handshake time (100 tests)
         self.beacon_time = 0.00842599630355835
-        self.send_time = 0.006556272506713867
+        self.send_time = 0.00006556272506713867
         print('handshake time: {}, pseudo slot time: {}'.format(self.beacon_time, self.pseudo_slot))
         print('{} > {}'.format(self.fullAngleDiv*(self.p+self.q), 1.28*self.n*180))
 
@@ -173,7 +173,10 @@ class Discovery:
             timeTilBack = 0
             # how long will we remain in the front
             while self.status[i] == 1:
-                timeTilBack += self.tranStep[i]
+                if self.mode == '1':
+                    timeTilBack += self.tranStep[i]
+                else:
+                    timeTilBack += self.recStep[i]
                 i += 1
             # we will remain in the front long enough to complete handshake
             if timeTilBack > self.beacon_time + self.send_time:
