@@ -112,7 +112,7 @@ def listenForAck(beacon_time, id, disc):
         flag = disc.checkFront()
         ser.reset_input_buffer() # reset input buffer
     # exit if we timed out
-    if time.time >= end_time:
+    if time.time() >= end_time:
         return
     ser.timeout = end_time - time.time() # receive timeout
     x = ser.read(3) # read in ('ack') from other node
