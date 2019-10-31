@@ -25,6 +25,8 @@ ser = serial.Serial(
     bytesize=serial.EIGHTBITS,
     timeout=0
 )
+ser.reset_input_buffer() # reset input buffer
+ser.reset_output_buffer() # reset input buffer
 
 aligned = False
 
