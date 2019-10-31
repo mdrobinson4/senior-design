@@ -173,18 +173,13 @@ class Discovery:
             timeTilBack = 0
             # how long will we remain in the front
             while self.status[i] == 1:
-                if self.mode == '1':
-                    timeTilBack += self.tranStep[i]
-                else:
-                    timeTilBack += self.recStep[i]
+                timeTilBack += self.recStep[i]
                 i += 1
             # we will remain in the front long enough to complete handshake
             if timeTilBack > self.beacon_time + self.send_time:
                 return 1
             else:
                 return 0
-
-
 
     def checkFront(self):
         return self.frontFlag
