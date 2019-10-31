@@ -89,7 +89,6 @@ class Discovery:
             # calculate phi the x-axis angle [ in degrees ]
             self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
 
-            print(self.theta[i])
             # needed since we can only rotate 180 degrees
             if self.x[i] < 0 and self.y[i] < 0:
                 self.phi[i] = 180 - self.phi[i]
@@ -98,6 +97,7 @@ class Discovery:
             elif self.x[i] < 0 and self.y[i] > 0:
                 self.phi[i] += 180.0
             else:
+                print(self.phi[i])
                 self.status[i] = 1  # facing the front, not the back
 
             # create an array of the previous coordinates
