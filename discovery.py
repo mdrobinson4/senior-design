@@ -78,28 +78,49 @@ class Discovery:
     def createPath(self):
         lin = np.linspace(-math.pi, math.pi, num=self.pointCount)
         p = 0
+
+        lastBPoint = -1
+
         for i in range(1, self.pointCount):
             p = math.cos(lin[i]/2)
             self.x[i] = p*math.sin(self.n*lin[i])
             self.y[i] = p*math.cos(self.n*lin[i])
             self.z[i] = math.sin(lin[i]/2)
+            # print(self.x[i],self.y[i],self.z[i])
+            if (self.y[i] < 0):
+                if lastBPoint == -1:
+                    lastBPoint = i
+                    continue
+            else:
+                for j in range(lastBPoint, i):
+                    self.x[j] = self.x[i]
+                    self.y[j] = self.y[i]
+                    self.z[j] = self.z[i]
+                lastBPoint = -1 
 
+
+
+        for i in range(1, self.pointCount):
             # calculate the radius of the sphere
-            r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)**(1/2)
+            # r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)**(1/2)
             # calculate theta the z-axis angle [ in degrees ]
-            self.theta[i] = math.degrees(math.acos(self.z[i] / r))
+            self.theta[i] = math.degrees(math.atan2(self.y[i], self.z[i]))
+            
             # calculate phi the x-axis angle [ in degrees ]
-            self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
+            self.phi[i] = math.degrees(math.atan2(self.z[i], self.x[i]))
+
+            # print(self.theta[i], self.phi[i])
+
 
             # needed since we can only rotate 180 degrees
-            if self.x[i] < 0 and self.y[i] < 0:
-                self.phi[i] = 180 - self.phi[i]
-            elif self.x[i] > 0 and self.y[i] < 0:
-                self.phi[i] *= -1
-            elif self.x[i] < 0 and self.y[i] > 0:
-                self.phi[i] += 180.0
-            else:
-                self.status[i] = 1  # facing the front, not the back
+            # if self.x[i] < 0 and self.y[i] < 0:
+            #    self.phi[i] = 180 - self.phi[i]
+            #elif self.x[i] > 0 and self.y[i] < 0:
+            #   self.phi[i] *= -1
+            #elif self.x[i] < 0 and self.y[i] > 0:
+            #   self.phi[i] += 180.0
+            #else:
+            #   self.status[i] = 1  # facing the front, not the back
 
             # create an array of the previous coordinates
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
@@ -154,8 +175,13 @@ class Discovery:
                 self.servoY.start(phi)
                 self.servoZ.start(theta)
             else:
-                self.servoY.ChangeDutyCycle(theta)
-                self.servoZ.ChangeDutyCycle(phi)
+                # print(theta, phi)
+                try:
+                    self.servoY.ChangeDutyCycle(theta)
+                    self.servoZ.ChangeDutyCycle(phi)
+                except ValueError:
+                    print(self.theta[j],theta, self.phi[j],phi)
+                    raise
             # necessary since
             if self.mode == '1':
                 time.sleep(self.tranStep[j])
