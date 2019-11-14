@@ -68,9 +68,9 @@ def listenForSyn(op_time, beacon_time, id, disc):
         while flag == 0 and time.time() < end_time:
             # reset buffers
             flag = disc.checkFront()
-    # clear buffers
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
+        # clear buffers
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
         # exit if we don't have time left
         if time.time() >= end_time:
             return
@@ -199,11 +199,12 @@ if __name__ == "__main__":
     disc = discovery.Discovery()
     disc.createPath()
     # servo path and handshake threads
-    if args.scanFlag === 1:
-        servoPathThread = threading.Thread(target=disc.scan)
+    servoPathThread = threading.Thread(target=disc.scan)
     handshakeThread = threading.Thread(target=handshake, args=(disc, id))
-    servoPathThread.start()
+    if args.scanFlag == 1:
+        servoPathThread.start()
     handshakeThread.start()
     # wait till both end to exit
-    servoPathThread.join()
+    if args.scanFlag == 1:
+        servoPathThread.join()
     handshakeThread.join()
