@@ -168,8 +168,8 @@ class Discovery:
         j = 0
         while not self.aligned and not self.discoveryFailed:
             j = i % (self.pointCount*2)
-            self.frontFlagTran = self.getStatus(j) # set the front flag so the handshake code can access it
-            self.frontFlagRec = self.status[j] # set the front flag so the handshake code can access it
+            #self.frontFlagTran = self.getStatus(j) # set the front flag so the handshake code can access it
+            #self.frontFlagRec = self.status[j] # set the front flag so the handshake code can access it
             theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the theta value (z axis)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the phi value (x,y axis)
             if i == 0:  # if we're just starting
@@ -196,6 +196,8 @@ class Discovery:
             GPIO.cleanup()
 
     def getStatus(self, pos):
+        return 1
+        '''
         # return 0 if we are currently in the back
         if self.status[pos] == 0:
             return 0
@@ -211,16 +213,20 @@ class Discovery:
                     timeTilBack += self.recStep[i]
                 i += 1
             # we will remain in the front long enough to complete handshake
-            if timeTilBack > 2*self.beacon_time:
+            if timeTilBack > self.beacon_time:
                 return 1
             else:
                 return 0
+            '''
 
     def checkFront(self):
+        return 1
+        '''
         if self.mode == '1':
             return self.frontFlagTran
         else:
             return self.frontFlagRec
+        '''
 
     def setAligned(self):
         self.aligned = True
