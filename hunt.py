@@ -5,6 +5,12 @@ import serial
 import discovery
 import math
 import os
+import argparse
+
+parser = argparse.ArgumentParser(description='Scan?')
+parser.add_argument('scanFlag', metavar='N', type=int)
+
+args = parser.parse_args()
 
 from dotenv import load_dotenv
 project_folder = os.path.expanduser('~/senior-design')  # adjust as appropriate
@@ -193,7 +199,8 @@ if __name__ == "__main__":
     disc = discovery.Discovery()
     disc.createPath()
     # servo path and handshake threads
-    servoPathThread = threading.Thread(target=disc.scan)
+    if args.scanFlag === 1:
+        servoPathThread = threading.Thread(target=disc.scan)
     handshakeThread = threading.Thread(target=handshake, args=(disc, id))
     servoPathThread.start()
     handshakeThread.start()
