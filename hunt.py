@@ -123,19 +123,6 @@ def listenForAck(beacon_time, id, disc):
             disc.setAligned()
             print('Aligned!')
             return
-        '''
-        # convert string to array
-        data = data.split(',')
-        # check to make sure the data is the correct length
-        if len(data) == 2:
-
-            # ensure we got the correct response
-        #if data[1] == incBits(id):
-            aligned = True
-            disc.setAligned()
-            print('Aligned!')
-            return
-        '''
     except:
         pass
 
@@ -205,6 +192,7 @@ if __name__ == "__main__":
         handshakeThread = threading.Thread(target=handshake, args=(disc, id))
         if args.scanFlag == 1:
             servoPathThread.start()
+            time.sleep(2)
         handshakeThread.start()
         # wait till both end to exit
         if args.scanFlag == 1:
