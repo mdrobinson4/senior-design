@@ -67,7 +67,7 @@ class Discovery:
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.status = np.zeros(self.pointCount)
-        self.front = False
+        self.front = 0
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
@@ -137,7 +137,7 @@ class Discovery:
             rStep = 0
             tStep = 0
             j = i % (self.pointCount*2)
-            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
+            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 4, 12)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 0, 15)
             
             #if abs(self.phi[j] - self.phi[j-1]) >= 170:
@@ -156,7 +156,7 @@ class Discovery:
                     raise
             # necessary since
             if abs(self.phi[j] - self.phi[j-1]) >= 170:
-                self.front = False
+                self.front = 0
                 k = j - 1
                 while (abs(self.phi[k] - self.phi[k-1]) < 170) and k > 0:
                         tStep += self.tranStep[k]
@@ -167,7 +167,7 @@ class Discovery:
                 else:
                     time.sleep(0.5)    
             else:
-                self.front = True
+                self.front = 1
                 if self.mode == '1':
                     #print('Transmitting')
                     time.sleep(self.tranStep[j])
