@@ -75,13 +75,11 @@ class Discovery:
     def createPath(self):
         lin = np.linspace(-math.pi, math.pi, num=self.pointCount)
         p = 0
-
         for i in range(1, self.pointCount):
             p = math.cos(lin[i]/2)
             self.x[i] = p*math.sin(self.n*lin[i])
             self.y[i] = p*math.cos(self.n*lin[i])
             self.z[i] = math.sin(lin[i]/2)
-
         for i in range(1, self.pointCount):
             t = 0
             r = 0
@@ -90,7 +88,6 @@ class Discovery:
             # calculate theta the z-axis angle [ in degrees ]
             self.theta[i] = math.degrees(math.acos(self.z[i] / r))
             self.phi[i] = math.degrees(math.atan(self.y[i]/ self.x[i])) + 90
-
             # create an array of the previous coordinates
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
             # create an array of the current coordinates
@@ -129,7 +126,6 @@ class Discovery:
         # Convert the 0-1 range into a value in the right range.
         return rightMin + (valueScaled * rightSpan)
 
-
     def scan(self):
         i = 0
         j = 0
@@ -139,42 +135,35 @@ class Discovery:
             j = i % (self.pointCount*2)
             theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 4, 12)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 0, 15)
-            
-            #if abs(self.phi[j] - self.phi[j-1]) >= 170:
-                    #time.sleep(1)
+            if abs(self.phi[j] - self.phi[j-1]) >= 170:
+                self.front = 0
+            else:
+                self.front = 1
             if i == 0:  # if we're just starting
                 self.servoY.start(phi)
                 self.servoZ.start(theta)
             else:
-                # print(theta, phi)
                 try:
                     self.servoY.ChangeDutyCycle(theta)
                     self.servoZ.ChangeDutyCycle(phi)
-                    # print(theta, phi)
                 except ValueError:
                     print(self.theta[j],theta, self.phi[j],phi)
                     raise
             # necessary since
-            if abs(self.phi[j] - self.phi[j-1]) >= 170:
-                self.front = 0
+            if self.front == 0:
                 k = j - 1
                 while (abs(self.phi[k] - self.phi[k-1]) < 170) and k > 0:
                         tStep += self.tranStep[k]
                         rStep += self.recStep[k]
                         k -= 1
-                if self.mode == '1':
-                    time.sleep(0.5)
-                else:
-                    time.sleep(0.5)    
+                time.sleep(0.5)    
             else:
-                self.front = 1
                 if self.mode == '1':
-                    #print('Transmitting')
                     time.sleep(self.tranStep[j])
                 else:
-                    #print('Reception')
                     time.sleep(self.recStep[j])
             i += 1
+            self.front = 1
         if not self.aligned == True:
             GPIO.cleanup()
 
