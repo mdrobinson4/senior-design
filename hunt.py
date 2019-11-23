@@ -198,13 +198,18 @@ if __name__ == "__main__":
     # servo path class
     disc = discovery.Discovery()
     disc.createPath()
-    # servo path and handshake threads
-    servoPathThread = threading.Thread(target=disc.scan)
-    handshakeThread = threading.Thread(target=handshake, args=(disc, id))
-    if args.scanFlag == 1:
-        servoPathThread.start()
-    handshakeThread.start()
-    # wait till both end to exit
-    if args.scanFlag == 1:
-        servoPathThread.join()
-    handshakeThread.join()
+    try:
+        # servo path and handshake threads
+        servoPathThread = threading.Thread(target=disc.scan)
+        handshakeThread = threading.Thread(target=handshake, args=(disc, id))
+        if args.scanFlag == 1:
+            servoPathThread.start()
+        handshakeThread.start()
+        # wait till both end to exit
+        if args.scanFlag == 1:
+            servoPathThread.join()
+        handshakeThread.join()
+    except KeyboardInterrupt:
+        #servoPathThread.close()
+        #handshakeThread.close()
+        raise

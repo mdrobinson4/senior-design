@@ -36,9 +36,9 @@ class Discovery:
         # number of rotations necessary to scan 3d area
         self.n = 180 / self.covWidth
         # transmission angular velocity [ degrees / second ]
-        self.wT = 300
+        self.wT = int(200)
         # reception angular velocity [ degrees / second ]
-        self.wR = 290
+        self.wR = int(170)
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
 
@@ -57,10 +57,8 @@ class Discovery:
         # between two consecutive angles will not be equal. Which is not
         # preferred since we want the angular speed to be constant, for now
         self.steps = np.zeros(self.pointCount)
-
         self.theta = np.zeros(self.pointCount)
         self.phi = np.zeros(self.pointCount)
-
         self.tranStep = np.zeros(self.pointCount)
         self.recStep = np.zeros(self.pointCount)
 
@@ -69,8 +67,7 @@ class Discovery:
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.status = np.zeros(self.pointCount)
-        self.frontFlagTran = 0
-        self.frontFlagRec = 0
+        self.front = False
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
@@ -79,49 +76,20 @@ class Discovery:
         lin = np.linspace(-math.pi, math.pi, num=self.pointCount)
         p = 0
 
-        lastBPoint = -1
-
         for i in range(1, self.pointCount):
             p = math.cos(lin[i]/2)
             self.x[i] = p*math.sin(self.n*lin[i])
             self.y[i] = p*math.cos(self.n*lin[i])
             self.z[i] = math.sin(lin[i]/2)
-            # print(self.x[i],self.y[i],self.z[i])
-            # if (self.y[i] < 0):
-            #     if lastBPoint == -1:
-            #         lastBPoint = i
-            # else:
-            #     if lastBPoint != -1:
-            #         for j in range(lastBPoint, i):
-            #             self.x[j] = self.x[i]
-            #             self.y[j] = self.y[i]
-            #             self.z[j] = self.z[i]
-            #         lastBPoint = -1 
-
-
 
         for i in range(1, self.pointCount):
+            t = 0
+            r = 0
             # calculate the radius of the sphere
             r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)
             # calculate theta the z-axis angle [ in degrees ]
             self.theta[i] = math.degrees(math.acos(self.z[i] / r))
-            # if self.theta[i] < 0:
-            #     self.theta[i] *= -1
-            # calculate phi the x-axis angle [ in degrees ]
             self.phi[i] = math.degrees(math.atan(self.y[i]/ self.x[i])) + 90
-
-            # print(self.theta[i], self.phi[i])
-
-
-            # needed since we can only rotate 180 degrees
-            # if self.x[i] < 0 and self.y[i] < 0:
-            #    self.phi[i] = 180 - self.phi[i]
-            # elif self.x[i] > 0 and self.y[i] < 0:
-            #   self.phi[i] *= -1
-            # elif self.x[i] < 0 and self.y[i] > 0:
-            #   self.phi[i] += 180.0
-            # else:
-            #   self.status[i] = 1  # facing the front, not the back
 
             # create an array of the previous coordinates
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
@@ -134,14 +102,13 @@ class Discovery:
                 angleChange = math.degrees(((math.acos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr))))))
             # calculate the amount of time for the servo to rest
             # so we maintain constant transmission and receiving mode speeds
-            self.tranStep[i-1] = angleChange / self.wT
-            self.recStep[i-1] = angleChange / self.wR
+            self.tranStep[i] = angleChange / self.wT
+            self.recStep[i] = angleChange / self.wR
         # reverse the theta/phi angles and transmission/reception sleep times
         self.phi = np.append(self.phi, self.phi[::-1])
         self.theta = np.append(self.theta, self.theta[::-1])
         self.tranStep = np.append(self.tranStep, self.tranStep[::-1])
         self.recStep = np.append(self.recStep, self.recStep[::-1])
-        self.status = np.append(self.status, self.status[::-1])
 
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
@@ -167,11 +134,14 @@ class Discovery:
         i = 0
         j = 0
         while not self.aligned and not self.discoveryFailed:
+            rStep = 0
+            tStep = 0
             j = i % (self.pointCount*2)
-            #self.frontFlagTran = self.getStatus(j) # set the front flag so the handshake code can access it
-            #self.frontFlagRec = self.status[j] # set the front flag so the handshake code can access it
-            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the theta value (z axis)
-            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7) # translate the phi value (x,y axis)
+            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
+            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 0, 15)
+            
+            #if abs(self.phi[j] - self.phi[j-1]) >= 170:
+                    #time.sleep(1)
             if i == 0:  # if we're just starting
                 self.servoY.start(phi)
                 self.servoZ.start(theta)
@@ -185,48 +155,31 @@ class Discovery:
                     print(self.theta[j],theta, self.phi[j],phi)
                     raise
             # necessary since
-            if self.mode == '1':
-                time.sleep(self.tranStep[j])
-                # time.sleep(.05)
-            elif self.mode == '0':
-                time.sleep(self.recStep[j])
-                # time.sleep(.05)
+            if abs(self.phi[j] - self.phi[j-1]) >= 170:
+                self.front = False
+                k = j - 1
+                while (abs(self.phi[k] - self.phi[k-1]) < 170) and k > 0:
+                        tStep += self.tranStep[k]
+                        rStep += self.recStep[k]
+                        k -= 1
+                if self.mode == '1':
+                    time.sleep(0.5)
+                else:
+                    time.sleep(0.5)    
+            else:
+                self.front = True
+                if self.mode == '1':
+                    #print('Transmitting')
+                    time.sleep(self.tranStep[j])
+                else:
+                    #print('Reception')
+                    time.sleep(self.recStep[j])
             i += 1
         if not self.aligned == True:
             GPIO.cleanup()
 
-    def getStatus(self, pos):
-        return 1
-        '''
-        # return 0 if we are currently in the back
-        if self.status[pos] == 0:
-            return 0
-        # if we are currently in the front, see how long we will remain in the front
-        elif self.status[pos] == 1:
-            i = pos
-            timeTilBack = 0
-            # how long will we remain in the front
-            while self.status[i] == 1:
-                if self.mode == '1':
-                    timeTilBack += self.tranStep[i]
-                else:
-                    timeTilBack += self.recStep[i]
-                i += 1
-            # we will remain in the front long enough to complete handshake
-            if timeTilBack > self.beacon_time:
-                return 1
-            else:
-                return 0
-            '''
-
     def checkFront(self):
-        return 1
-        '''
-        if self.mode == '1':
-            return self.frontFlagTran
-        else:
-            return self.frontFlagRec
-        '''
+        return self.front
 
     def setAligned(self):
         self.aligned = True
