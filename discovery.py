@@ -70,7 +70,8 @@ class Discovery:
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.status = np.zeros(self.pointCount)
-        self.front = 0        self.step = np.zeros(self.pointCount)
+        self.front = 0        
+        self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
     # sets the path that the servo will take
@@ -104,6 +105,7 @@ class Discovery:
             self.tranStep[i] = angleChange / self.wT
             self.recStep[i] = angleChange / self.wR
         # reverse the theta/phi angles and transmission/reception sleep times
+        
         if id == '1':
             self.phi = np.append(self.phi[::-1], self.phi)
             self.theta = np.append(self.theta[::-1], self.theta)
