@@ -141,7 +141,7 @@ class Discovery:
             rStep = 0
             tStep = 0
             j = i % (self.pointCount*2)
-            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 4, 12)
+            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 0, 15)
             phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 0, 15)
             if abs(self.phi[j] - self.phi[j-1]) >= 170:
                 self.front = 0
