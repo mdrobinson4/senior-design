@@ -70,8 +70,7 @@ class Discovery:
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.status = np.zeros(self.pointCount)
-        self.front = 0
-        self.step = np.zeros(self.pointCount)
+        self.front = 0        self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
     # sets the path that the servo will take
@@ -158,7 +157,6 @@ class Discovery:
                 except ValueError:
                     print(self.theta[j],theta, self.phi[j],phi)
                     raise
-            # necessary since
             if self.front == 0:
                 k = j - 1
                 while (abs(self.phi[k] - self.phi[k-1]) < 170) and k > 0:
