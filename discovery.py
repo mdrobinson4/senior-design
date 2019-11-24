@@ -5,6 +5,9 @@ import math
 from numpy import*
 from numpy.linalg import norm
 import serial
+import os
+
+id = os.getenv('ID')
 
 # MODE: 1 -> Transmit || 0 -> Receive
 
@@ -102,10 +105,16 @@ class Discovery:
             self.tranStep[i] = angleChange / self.wT
             self.recStep[i] = angleChange / self.wR
         # reverse the theta/phi angles and transmission/reception sleep times
-        self.phi = np.append(self.phi, self.phi[::-1])
-        self.theta = np.append(self.theta, self.theta[::-1])
-        self.tranStep = np.append(self.tranStep, self.tranStep[::-1])
-        self.recStep = np.append(self.recStep, self.recStep[::-1])
+        if id == '1':
+            self.phi = np.append(self.phi[::-1], self.phi)
+            self.theta = np.append(self.theta[::-1], self.theta)
+            self.tranStep = np.append(self.tranStep[::-1], self.tranStep)
+            self.recStep = np.append(self.recStep[::-1], self.recStep)
+        else:
+            self.phi = np.append(self.phi, self.phi[::-1])
+            self.theta = np.append(self.theta, self.theta[::-1])
+            self.tranStep = np.append(self.tranStep, self.tranStep[::-1])
+            self.recStep = np.append(self.recStep, self.recStep[::-1])
 
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
