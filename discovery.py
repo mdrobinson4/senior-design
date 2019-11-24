@@ -150,8 +150,8 @@ class Discovery:
             else:
                 self.front = 1
             if i == 0:  # if we're just starting
-                self.servoY.start(phi)
-                self.servoZ.start(theta)
+                self.servoY.start(theta)
+                self.servoZ.start(phi)
             else:
                 try:
                     self.servoY.ChangeDutyCycle(theta)
