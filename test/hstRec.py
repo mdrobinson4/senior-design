@@ -19,15 +19,7 @@ ser = serial.Serial(
     write_timeout=None
 )
 
-start_start_time = 0
-send_time = 0
-
-res = ser.read()
-data = res.decode()
-
-start_time = time.time()
-str = ('2').encode()
-ser.write(str)
-
-send_time = time.time() - start_time
-print('It took [{}] seconds to send [{}]'.format(send_time, str))
+for i in range(100):
+    res = ser.read(5)
+    data = res.decode()
+    ser.write(('ack').encode())

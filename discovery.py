@@ -5,6 +5,9 @@ import math
 from numpy import*
 from numpy.linalg import norm
 import serial
+import os
+
+id = os.getenv('ID')
 
 # MODE: 1 -> Transmit || 0 -> Receive
 
@@ -23,10 +26,6 @@ class Discovery:
         # initialize servos
         self.servoZ = GPIO.PWM(2, 50)
         self.servoY= GPIO.PWM(3, 50)
-        #self.servoZ.ChangeDutyCycle(0)
-        #self.servoY.ChangeDutyCycle(0)
-        #self.servoZ.start(0)
-        #self.servoY.start(0)
 
         self.aligned = False
         self.discoveryFailed = False
@@ -35,27 +34,23 @@ class Discovery:
         # half angle from the axis of propagation for transmissions.
         # The angle of field-of-view is 2 * beta
         self.fullAngleDiv = 56
-        # width of convergence (y)
-        self.convWidth = (self.fullAngleDiv / 2) * math.sqrt(2)
+        # width of coverage (y)
+        self.covWidth = (self.fullAngleDiv / 2) * math.sqrt(2)
         # number of rotations necessary to scan 3d area
-        self.n = 180 / self.convWidth
+        self.n = 180 / self.covWidth
         # transmission angular velocity [ degrees / second ]
-        self.wT = 130
+        self.wT = int(200)
         # reception angular velocity [ degrees / second ]
-        self.wR = 110
+        self.wR = int(170)
         # Receiver (p) rounds and transmission (q) rounds
         (self.p, self.q) = simplify(self.wR, self.wT)
 
         # time we spend in each mode [ each slot ]
-        # Operation time = 2*p = 2*q rounds = (4*pi*q) / (Wt) = (4*pi*p) / (Wr)
         self.pseudo_slot = (2*1.28*self.n*180*self.q) / (self.wT)
-        # amount of time that beacon lasts
-        # Each beacon lasts for Tb = (p*divergence(t) + q*divergence(r) - 1.28*n*pi) / (8*q*Wr)
-        #self.beacon_time = ((self.p*self.fullAngleDiv) + (self.q*self.fullAngleDiv) - (1.28*self.n*math.pi)) / (8*self.q*self.wR)
-        self.beacon_time = 0.007922887802124023
-        print('Beacon Time: {}, Op Time: {}'.format(self.beacon_time, self.pseudo_slot))
-        # Check Theorem 1
-        # make sure that
+        # average handshake time (100 tests)
+        self.beacon_time = 0.00842599630355835
+        self.send_time = 0.00006556272506713867
+        print('handshake time: {}, pseudo slot time: {}'.format(self.beacon_time, self.pseudo_slot))
         print('{} > {}'.format(self.fullAngleDiv*(self.p+self.q), 1.28*self.n*180))
 
         # resolution
@@ -65,9 +60,7 @@ class Discovery:
         # between two consecutive angles will not be equal. Which is not
         # preferred since we want the angular speed to be constant, for now
         self.steps = np.zeros(self.pointCount)
-        # the z-axis angle
         self.theta = np.zeros(self.pointCount)
-        # the x-axis angle
         self.phi = np.zeros(self.pointCount)
         self.tranStep = np.zeros(self.pointCount)
         self.recStep = np.zeros(self.pointCount)
@@ -76,7 +69,8 @@ class Discovery:
         self.x = np.zeros(self.pointCount)
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
-        #self.p = np.zeros(self.pointCount)
+        self.status = np.zeros(self.pointCount)
+        self.front = 1        
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
@@ -89,30 +83,14 @@ class Discovery:
             self.x[i] = p*math.sin(self.n*lin[i])
             self.y[i] = p*math.cos(self.n*lin[i])
             self.z[i] = math.sin(lin[i]/2)
-            # calculate the new x, y, and z values
-            #self.x[i] = math.cos(self.s[i] / 2) * math.sin(self.s[i] * self.n)
-            #self.y[i] = math.cos(self.s[i] / 2) * math.cos(self.s[i] * self.n)
-            #self.z[i] = math.sin(self.s[i] / 2)
-
+        for i in range(1, self.pointCount):
+            t = 0
+            r = 0
             # calculate the radius of the sphere
-            r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)**(1/2)
+            r = (self.x[i]**2 + self.y[i]**2 + self.z[i]**2)
             # calculate theta the z-axis angle [ in degrees ]
             self.theta[i] = math.degrees(math.acos(self.z[i] / r))
-            # calculate phi the x-axis angle [ in degrees ]
-            self.phi[i] = math.degrees(math.atan(self.y[i] / self.x[i]))
-            
-            
-            # needed since we can only rotate 180 degrees
-            #self.phi[i] = self.translate(self.phi[i],-90,90,0,180)
-            
-            if self.x[i] < 0 and self.y[i] < 0:
-                self.phi[i] = 180 - self.phi[i]
-            elif self.x[i] > 0 and self.y[i] < 0:
-                self.phi[i] *= -1
-            elif self.x[i] < 0 and self.y[i] > 0:
-                self.phi[i] += 180.0
-            
-
+            self.phi[i] = math.degrees(math.atan(self.y[i]/ self.x[i])) + 90
             # create an array of the previous coordinates
             prev = np.array([self.x[i - 1] or 0, self.y[i - 1] or 0, self.z[i - 1] or 0])
             # create an array of the current coordinates
@@ -124,8 +102,20 @@ class Discovery:
                 angleChange = math.degrees(((math.acos(np.dot(prev, curr) / (np.linalg.norm(prev) * np.linalg.norm(curr))))))
             # calculate the amount of time for the servo to rest
             # so we maintain constant transmission and receiving mode speeds
-            self.tranStep[i-1] = angleChange / self.wT
-            self.recStep[i-1] = angleChange / self.wR
+            self.tranStep[i] = angleChange / self.wT
+            self.recStep[i] = angleChange / self.wR
+        # reverse the theta/phi angles and transmission/reception sleep times
+        
+        if id == '1':
+            self.phi = np.append(self.phi[::-1], self.phi)
+            self.theta = np.append(self.theta[::-1], self.theta)
+            self.tranStep = np.append(self.tranStep[::-1], self.tranStep)
+            self.recStep = np.append(self.recStep[::-1], self.recStep)
+        else:
+            self.phi = np.append(self.phi, self.phi[::-1])
+            self.theta = np.append(self.theta, self.theta[::-1])
+            self.tranStep = np.append(self.tranStep, self.tranStep[::-1])
+            self.recStep = np.append(self.recStep, self.recStep[::-1])
 
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
@@ -150,26 +140,44 @@ class Discovery:
         i = 0
         j = 0
         while not self.aligned and not self.discoveryFailed:
-            j = i % self.pointCount
-            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
-            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 2.2, 11.7)
-            if i == 0:
-                self.servoY.start(phi)
-                self.servoZ.start(theta)
+            rStep = 0
+            tStep = 0
+            j = i % (self.pointCount*2)
+            theta = self.translate((self.theta[j]/18)+2.5, 2.5, 12.5, 0, 15)
+            phi = self.translate((self.phi[j]/18)+2.5, 2.5, 12.5, 0, 15)
+            if abs(self.phi[j] - self.phi[j-1]) >= 170:
+                self.front = 0
             else:
-                self.servoY.ChangeDutyCycle(theta)
-                self.servoZ.ChangeDutyCycle(phi)
-            # necessary since
-            if self.mode == '1':
-                time.sleep(self.tranStep[j])
-            elif self.mode == '0':
-                time.sleep(self.recStep[j])
+                self.front = 1
+            if i == 0:  # if we're just starting
+                self.servoY.start(theta)
+                self.servoZ.start(phi)
+            else:
+                try:
+                    self.servoY.ChangeDutyCycle(theta)
+                    self.servoZ.ChangeDutyCycle(phi)
+                except ValueError:
+                    print(self.theta[j],theta, self.phi[j],phi)
+                    raise
+            if self.front == 0:
+                k = j - 1
+                while (abs(self.phi[k] - self.phi[k-1]) < 170) and k > 0:
+                        tStep += self.tranStep[k]
+                        rStep += self.recStep[k]
+                        k -= 1
+                time.sleep(0.5)    
+            else:
+                if self.mode == '1':
+                    time.sleep(self.tranStep[j])
+                else:
+                    time.sleep(self.recStep[j])
             i += 1
+            self.front = 1
         if not self.aligned == True:
-            #self.servoY.ChangeDutyCycle(self.translate((self.theta[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
-            #self.servoZ.ChangeDutyCycle(self.translate((self.phi[0]/18)+2.5, 2.5, 12.5, 2.2, 11.7))
-            time.sleep(1)
-        GPIO.cleanup()
+            GPIO.cleanup()
+
+    def checkFront(self):
+        return self.front
 
     def setAligned(self):
         self.aligned = True
