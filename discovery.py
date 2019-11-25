@@ -70,7 +70,7 @@ class Discovery:
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.status = np.zeros(self.pointCount)
-        self.front = 0        
+        self.front = 1        
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 
@@ -150,8 +150,8 @@ class Discovery:
             else:
                 self.front = 1
             if i == 0:  # if we're just starting
-                self.servoY.start(phi)
-                self.servoZ.start(theta)
+                self.servoY.start(theta)
+                self.servoZ.start(phi)
             else:
                 try:
                     self.servoY.ChangeDutyCycle(theta)
