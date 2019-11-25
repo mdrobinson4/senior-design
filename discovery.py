@@ -70,7 +70,7 @@ class Discovery:
         self.y = np.zeros(self.pointCount)
         self.z = np.zeros(self.pointCount)
         self.status = np.zeros(self.pointCount)
-        self.front = 0        
+        self.front = 1        
         self.step = np.zeros(self.pointCount)
         self.s = np.linspace(-np.pi, np.pi, self.pointCount)
 

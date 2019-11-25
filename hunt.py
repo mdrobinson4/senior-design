@@ -32,6 +32,9 @@ ser = serial.Serial(
     timeout=0
 )
 
+#while True:
+#    ser.write(b'1')
+
 ser.reset_input_buffer() # reset input buffer
 ser.reset_output_buffer() # reset input buffer
 
@@ -80,31 +83,31 @@ def listenForSyn(op_time, beacon_time, id, disc):
             ser.timeout = end_time - time.time()
         else:
             ser.timeout = beacon_time
-
-        x = ser.read(5) # wait for synchronous signal ('hello')
-        try:
-            # decode data
-            data = x.decode()
-            if data == 'hello':
-                ser.write(('ack').encode())
-                aligned = True
-                disc.setAligned()
-                print('Aligned!')
-                return
-            '''
-            # if we got the expected syn (?)
-            if len(data) == len(id):
-                # write the our id and syn+1 to other node
-                str = ('{},{}'.format(id, incBits(data))).encode()
-                ser.write(str)
-                print('sent: {} in listenForSyn'.format(str))
-                aligned = True
-                disc.setAligned()
-                print('Aligned!')
-                return
-            '''
-        except:
-            pass
+        if ser.in_waiting > 0:
+            x = ser.read(5) # wait for synchronous signal ('hello')
+            try:
+                # decode data
+                data = x.decode()
+                if data == 'hello':
+                    ser.write(('ack').encode())
+                    aligned = True
+                    disc.setAligned()
+                    print('Aligned!')
+                    return
+                '''
+                # if we got the expected syn (?)
+                if len(data) == len(id):
+                    # write the our id and syn+1 to other node
+                    str = ('{},{}'.format(id, incBits(data))).encode()
+                    ser.write(str)
+                    print('sent: {} in listenForSyn'.format(str))
+                    aligned = True
+                    disc.setAligned()
+                    print('Aligned!')
+                    return
+                '''
+            except:
+                pass
 
 # listen for an ack response
 def listenForAck(beacon_time, id, disc):
@@ -114,17 +117,18 @@ def listenForAck(beacon_time, id, disc):
     if time.time() >= end_time:
         return
     ser.timeout = end_time - time.time() # receive timeout
-    x = ser.read(3) # read in ('ack') from other node
-    # decode data and see if it is what we were expecting: ('ack')
-    try:
-        data = x.decode()
-        if data == 'ack':
-            aligned = True
-            disc.setAligned()
-            print('Aligned!')
-            return
-    except:
-        pass
+    if ser.in_waiting > 0:
+        x = ser.read(3) # read in ('ack') from other node
+        # decode data and see if it is what we were expecting: ('ack')
+        try:
+            data = x.decode()
+            if data == 'ack':
+                aligned = True
+                disc.setAligned()
+                print('Aligned!')
+                return
+        except:
+            pass
 
 # send synchronous signal
 def sendSyn(beacon_time, id):
