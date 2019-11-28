@@ -79,16 +79,17 @@ def sendSyn():
 def listenForAck(ackWaitTime):
     global exitThread
     endTime = ackWaitTime + time.time()
-    ser.timeout = ackWaitTime
-    x = ser.read(3)
-    try:
-        data = x.decode()
-        if data == 'ack':
-            exitThread = True
-            print('Aligned!')
-        return
-    except:
-        pass
+    while end_time > time.time() and not exitThread:
+        ser.timeout = endTime - time.time()
+        x = ser.read(3)
+        try:
+            data = x.decode()
+            if data == 'ack':
+                exitThread = True
+                print('Aligned!')
+            return
+        except:
+            pass
 
 def listenForSyn(slotEndTime, ackWaitTime):
     global exitThread
@@ -104,7 +105,8 @@ def listenForSyn(slotEndTime, ackWaitTime):
         try:
             data = x.decode()
             if data == 'hello':
-                ser.write(('ack').encode())
+                for i in range(1,5):
+                    ser.write(('ack').encode())
                 exitThread = True
                 print('Aligned!')
                 return
