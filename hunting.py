@@ -52,7 +52,10 @@ def handshake(path, seq):
     global currMode
     ackWaitTime = 2*path['ackWait']
     slotTime = path['slotTime']
-    for mode in seq:
+    #for mode in seq
+    i = 0
+    while i < len(seq) and not exitThread:
+        mode = seq[i]
         print('current mode: {}'.format(mode))
         slotEndTime = slotTime + time.time()
         currMode = mode
@@ -66,6 +69,7 @@ def handshake(path, seq):
                     time.sleep(slotEndTime - time.time())
         elif currMode == '0':
             listenForSyn(slotEndTime, ackWaitTime)
+        i += 1
 
 def sendSyn():
     ser.reset_input_buffer()
