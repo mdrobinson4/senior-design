@@ -48,13 +48,14 @@ def main():
     handshakeThread.join()
 
 def handshake(path, seq):
-    global mode
+    global currMode
     ackWaitTime = 2*path['ackWait']
     slotTime = path['slotTime']
-    for state in seq:
+    for mode in seq:
+        print('mode: {}'.format(mode))
         slotEndTime = slotTime + time.time()
-        mode = state
-        if state == '1':
+        currMode = mode
+        if currMode == '1':
             while time.time() < slotEndTime and not exitThread:
                 checkBackFlag(slotEndTime)  # see if we are traversing the back
                 if slotEndTime - time.time() >= ackWaitTime:
@@ -62,7 +63,7 @@ def handshake(path, seq):
                     listenForAck(ackWaitTime)
                 elif slotEndTime - time.time() < ackWaitTime:
                     time.sleep(slotEndTime - time.time())
-        elif state == '0':
+        elif currMode == '0':
             listenForSyn(slotEndTime, ackWaitTime)
 
 def sendSyn():
