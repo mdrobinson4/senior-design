@@ -33,12 +33,13 @@ id = os.getenv('id')
 servoTheta = GPIO.PWM(3, 50)
 servoPhi = GPIO.PWM(2, 50)
 exitThread = False
-currMode = id
+currMode = str(id)
 backFlag = True
 
 
 def main():
     seq = generateSeq(id)
+    print('mode sequence: {}'.format(seq))
     path = pickle.load(open("path.p", "rb"))
     servoThread = threading.Thread(target=servoPath, args=(path, seq))
     handshakeThread = threading.Thread(target=handshake, args=(path, seq))
@@ -52,7 +53,7 @@ def handshake(path, seq):
     ackWaitTime = 2*path['ackWait']
     slotTime = path['slotTime']
     for mode in seq:
-        print('mode: {}'.format(mode))
+        print('current mode: {}'.format(mode))
         slotEndTime = slotTime + time.time()
         currMode = mode
         if currMode == '1':
@@ -174,7 +175,7 @@ def getPath(path):
     return (phi, theta, tranWait, recWait)
 
 def generateSeq(id):
-    seq = ''
+    seq = str(id)
     for i in range(0, math.floor(len(id) / 2) + 1):
         seq += '0'
     for i in range(0, math.ceil(len(id) / 2)):
