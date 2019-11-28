@@ -6,11 +6,13 @@ import numpy as np
 import time
 import RPi.GPIO as GPIO
 import serial
+import threading
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(2, GPIO.OUT)
 GPIO.setup(3, GPIO.OUT)
+GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 GPIO.output(18, GPIO.HIGH)
 
 ser = serial.Serial(
@@ -95,14 +97,13 @@ def listenForSyn(slotEndTime, ackWaitTime):
         x = ser.read(5)
         try:
             data = x.decode()
-            if data = 'hello'
+            if data == 'hello':
                 ser.write(('ack').encode())
                 exitThread = True
                 print('Aligned!')
                 return
         except:
             pass
-
 
 
 def checkBackFlag(slotEndTime):
