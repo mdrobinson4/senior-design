@@ -143,7 +143,9 @@ def servoPath(path, seq):
         elif currMode == '0':
             time.sleep(recSleep)
         i += 1
-        backFlag = False
+        backFlag = True
+        if exitThread == True:
+            (phiRad, thetaRad) = convertValues(phi[(j-1)%len(phi)], theta[(j-1)%len(phi)])
 
 def convertValues(phi, theta):
     phi = translate((phi / 18) + 2.5, 2.5, 12.5, 3.5, 10.5)
