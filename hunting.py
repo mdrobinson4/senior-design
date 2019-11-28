@@ -79,7 +79,7 @@ def sendSyn():
 def listenForAck(ackWaitTime):
     global exitThread
     endTime = ackWaitTime + time.time()
-    while end_time > time.time() and not exitThread:
+    while endTime > time.time() and not exitThread:
         ser.timeout = endTime - time.time()
         x = ser.read(3)
         try:
