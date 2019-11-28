@@ -96,10 +96,10 @@ def listenForSyn(slotEndTime, ackWaitTime):
         try:
             data = x.decode()
             if data = 'hello'
-            ser.write(('ack').encode())
-            exitThread = True
-            print('Aligned!')
-            return
+                ser.write(('ack').encode())
+                exitThread = True
+                print('Aligned!')
+                return
         except:
             pass
 
