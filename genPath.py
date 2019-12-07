@@ -8,15 +8,15 @@ import pickle
 
 def main():
     diverg = 56
-    wT = 200
-    wR = 170
+    wT = 100
+    wR = 85 
     pts = 1000
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)
     slotTime = calcSlotTime(wR, wT, n)
     (x, y, z) = genCoords(n, pts)
     (phi, theta, tranWait, recWait) = genPath(x, y, z, wT, wR, pts)
-    path = {"phi": phi, "theta": theta, "tranWait": tranWait, "recWait": recWait, "slotTime": slotTime, "ackWait": ackWait}
+    path = {"phi": phi, "theta": theta, "tranWait": tranWait, "recWait": recWait, "slotTime": slotTime, "ackWait": ackWait, "wT": wT, "wR": wR}
     pickle.dump(path, open("path.p", "wb"))
     plot(x, y, z, phi, theta)
 

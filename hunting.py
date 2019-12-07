@@ -115,8 +115,8 @@ def listenForSyn(slotEndTime, ackWaitTime):
 
 
 def checkBackFlag(slotEndTime):
-    while backFlag == True and time.time() < slotEndTime:
-        pass
+    #while backFlag == True and time.time() < slotEndTime:
+    #    pass
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
@@ -131,26 +131,55 @@ def servoPath(path, seq):
         j = i % len(phi)
         if abs(phi[j] - phi[j-1]) >= 170:
             backFlag = True
-            tranSleep = 0.5
-            recSleep = 0.5
+            if phi[j-1] > 90:
+                angle = 180
+                direction = -1
+            else:
+                angle = 0
+                direction = 1
+
+            for backi in range(100):
+                (phiRad, thetaRad) = convertValues(angle, theta[j-1])
+                servoPhi.ChangeDutyCycle(phiRad)
+                servoTheta.ChangeDutyCycle(thetaRad)
+                angle += 1.8 * direction
+                if currMode == '1':
+                    time.sleep(180/path["wT"]/100)
+                else: 
+                    time.sleep(180/path["wR"]/100)
+            transSleep = 0
+            recSleep = 0
+            #tranSleep = 0.5
+            #recSleep = 0.5
         else:
             backFlag = False
             tranSleep = tranWait[j]
             recSleep = recWait[j]
+        if exitThread == False:
+            (phiRad, thetaRad) = convertValues(phi[j], theta[j])
+            servoPhi.ChangeDutyCycle(phiRad)
+            servoTheta.ChangeDutyCycle(thetaRad)
+            print(currMode)
+            if currMode == '1':
+                time.sleep(tranSleep)
+            elif currMode == '0':
+                time.sleep(recSleep)
+            i += 1
+        backFlag = True
+    else:
+        s = 0
+        if j < 20:
+            s = 2000 - 20 + j
+        else:
+            s = j - 20
+        print("align")
         (phiRad, thetaRad) = convertValues(phi[j], theta[j])
         servoPhi.ChangeDutyCycle(phiRad)
         servoTheta.ChangeDutyCycle(thetaRad)
-        if currMode == '1':
-            time.sleep(tranSleep)
-        elif currMode == '0':
-            time.sleep(recSleep)
-        i += 1
-        backFlag = True
-        if exitThread == True:
-            (phiRad, thetaRad) = convertValues(phi[(j-1)%len(phi)], theta[(j-1)%len(phi)])
+        time.sleep(1)
 
 def convertValues(phi, theta):
-    phi = translate((phi / 18) + 2.5, 2.5, 12.5, 3.5, 10.5)
+    phi = translate((phi / 18) + 2.5, 2.5, 12.5, 2.2, 11.7)
     theta = translate((theta / 18) + 2.5, 2.5, 12.5, 2.2, 11.7)
     return (phi, theta)
 
