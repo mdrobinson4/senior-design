@@ -98,4 +98,5 @@ def calcCoverage(diverg):
     n = (180 / coverage)
     return (coverage, n)
 
-main()
+if __name__ == "__main__":
+    main()

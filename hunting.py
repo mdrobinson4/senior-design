@@ -189,5 +189,6 @@ def generateSeq(id):
     for i in range(0, math.ceil(len(id) / 2)):
         seq += '1'
     return seq
-
-main()
+    
+if __name__ == "__main__":
+    main()
