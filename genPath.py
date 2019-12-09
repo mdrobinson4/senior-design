@@ -5,8 +5,12 @@ from mpl_toolkits import mplot3d
 import numpy as np
 import math
 import pickle
+import os
+from dotenv import load_dotenv
 
 def main():
+    load_dotenv()
+    id = os.getenv('id')
     diverg = 56
     wT = 300
     wR = 97
@@ -14,18 +18,22 @@ def main():
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)
     slotTime = calcSlotTime(wR, wT, n)
-    (x, y, z) = genCoords(n, pts)
+    (x, y, z) = genCoords(n, pts, id)
     (phi, theta, tranWait, recWait) = genPath(x, y, z, wT, wR, pts)
     path = {"phi": phi, "theta": theta, "tranWait": tranWait, "recWait": recWait, "slotTime": slotTime, "ackWait": ackWait, "wT": wT, "wR": wR}
     pickle.dump(path, open("path.p", "wb"))
     plot(x, y, z, phi, theta)
 
 # generate the x, y, z coordinates
-def genCoords(n, pts):
+def genCoords(n, pts, id):
     x = []
     y = []
     z = []
-    lin = linspace(-math.pi, 0, num=pts)
+    lin = []
+    if id == '0':
+        lin = linspace(-math.pi, 0, num=pts)
+    else:
+        lin = linspace(0.00000001, math.pi, num=pts)
     for i in range(0,pts-1):
         r = math.cos(lin[i]/2)
         x.append(r*math.sin(n*lin[i]))
