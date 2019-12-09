@@ -8,8 +8,8 @@ import pickle
 
 def main():
     diverg = 56
-    wT = 100
-    wR = 85 
+    wT = 300
+    wR = 97
     pts = 1000
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)
@@ -25,7 +25,7 @@ def genCoords(n, pts):
     x = []
     y = []
     z = []
-    lin = linspace(-math.pi, math.pi, num=pts)
+    lin = linspace(-math.pi, 0, num=pts)
     for i in range(0,pts-1):
         r = math.cos(lin[i]/2)
         x.append(r*math.sin(n*lin[i]))
@@ -44,10 +44,11 @@ def genPath(x, y, z, wT, wR, pts):
         theta.append(math.degrees(math.acos(z[i] / radius)))
         phi.append(math.degrees(math.atan(y[i] / x[i])) + 90)
         if i > 0:
-            u = array([x[i],y[i],z[i]])
-            v = ([x[i-1],y[i-1],z[i-1]])
+            u = array([x[i],y[i],0])
+            v = ([x[i-1],y[i-1],0])
             c = dot(u,v)/norm(u)/norm(v) # -> cosine of the angle
             angle = math.degrees(math.acos(clip(c, -1, 1))) # if you really want the angle
+            #angle = phi[i] - phi[i-1]
             tranWait.append(angle / wT)
             recWait.append(angle / wR)
         else:

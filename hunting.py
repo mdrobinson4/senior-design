@@ -55,8 +55,8 @@ def handshake(path, seq):
     #for mode in seq
     i = 0
     while i < len(seq) and not exitThread:
-        mode = seq[i]
-        print('current mode: {}'.format(mode))
+        mode = seq[0]
+        #print('current mode: {}'.format(mode))
         slotEndTime = slotTime + time.time()
         currMode = mode
         if currMode == '1':
@@ -115,8 +115,9 @@ def listenForSyn(slotEndTime, ackWaitTime):
 
 
 def checkBackFlag(slotEndTime):
-    #while backFlag == True and time.time() < slotEndTime:
-    #    pass
+    return
+    while backFlag == True and time.time() < slotEndTime:
+        pass
     ser.reset_input_buffer()
     ser.reset_output_buffer()
 
@@ -139,6 +140,8 @@ def servoPath(path, seq):
                 direction = 1
 
             for backi in range(100):
+                if exitThread:
+                    break
                 (phiRad, thetaRad) = convertValues(angle, theta[j-1])
                 servoPhi.ChangeDutyCycle(phiRad)
                 servoTheta.ChangeDutyCycle(thetaRad)
@@ -159,7 +162,7 @@ def servoPath(path, seq):
             (phiRad, thetaRad) = convertValues(phi[j], theta[j])
             servoPhi.ChangeDutyCycle(phiRad)
             servoTheta.ChangeDutyCycle(thetaRad)
-            print(currMode)
+            #print(currMode)
             if currMode == '1':
                 time.sleep(tranSleep)
             elif currMode == '0':
