@@ -14,7 +14,7 @@ def main():
     diverg = 56
     wT = 300
     wR = 97
-    pts = 100000
+    pts = 1000
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)
     slotTime = calcSlotTime(wR, wT, n)
@@ -38,7 +38,10 @@ def genCoords(n, pts, id):
     y = []
     z = []
     lin = []
-    lin = linspace(-math.pi, math.pi, num=pts)
+    if id == '0':
+        lin = linspace(-math.pi, 0, num=pts)
+    else:
+        lin = linspace(0.0000001, math.pi, num=pts)
     for i in range(0,pts-1):
         r = math.cos(lin[i]/2)
         x.append(r*math.sin(n*lin[i]))

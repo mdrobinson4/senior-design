@@ -79,8 +79,9 @@ def sendSyn():
 def listenForAck(ackWaitTime):
     global exitThread
     endTime = ackWaitTime + time.time()
+    timeout = endTime - time.time()
     while endTime > time.time() and not exitThread:
-        ser.timeout = endTime - time.time()
+        ser.timeout = timeout#endTime - time.time()
         x = ser.read(3)
         try:
             data = x.decode()
@@ -141,17 +142,18 @@ def servoPath(path, seq):
                 angle = 0
                 direction = 1
 
-            for backi in range(1000):
+            for backi in range(100):
                 if exitThread == True:
                     break
+
                 (phiRad, thetaRad) = convertValues(angle, theta[j-1])
                 servoPhi.ChangeDutyCycle(phiRad)
                 servoTheta.ChangeDutyCycle(thetaRad)
-                angle += .18 * direction
+                angle += 1.8 * direction
                 if currMode == '1':
-                    time.sleep(180/path["wT"]/1000)
+                    time.sleep(180/path["wT"]/100)
                 else: 
-                    time.sleep(180/path["wR"]/1000)
+                    time.sleep(180/path["wR"]/100)
             transSleep = 0
             recSleep = 0
         
