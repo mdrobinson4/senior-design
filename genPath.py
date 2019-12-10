@@ -14,7 +14,7 @@ def main():
     diverg = 56
     wT = 300
     wR = 97
-    pts = 1000
+    pts = 100000
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)
     slotTime = calcSlotTime(wR, wT, n)

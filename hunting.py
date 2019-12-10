@@ -116,10 +116,10 @@ def listenForSyn(slotEndTime, ackWaitTime):
 
 
 def checkBackFlag(slotEndTime):
+    return
     while backFlag == True and time.time() < slotEndTime:
-        pass
-    ser.reset_input_buffer()
-    ser.reset_output_buffer()
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
 
 def servoPath(path, seq):
     global backFlag
@@ -141,23 +141,23 @@ def servoPath(path, seq):
                 angle = 0
                 direction = 1
 
-            for backi in range(100):
+            for backi in range(1000):
                 if exitThread == True:
                     break
                 (phiRad, thetaRad) = convertValues(angle, theta[j-1])
                 servoPhi.ChangeDutyCycle(phiRad)
                 servoTheta.ChangeDutyCycle(thetaRad)
-                angle += 1.8 * direction
+                angle += .18 * direction
                 if currMode == '1':
-                    time.sleep(180/path["wT"]/100)
+                    time.sleep(180/path["wT"]/1000)
                 else: 
-                    time.sleep(180/path["wR"]/100)
+                    time.sleep(180/path["wR"]/1000)
             transSleep = 0
             recSleep = 0
         
         
         else:
-            backFlag = True
+            backFlag = False
             servoPhi.ChangeDutyCycle(phiRad)
             servoTheta.ChangeDutyCycle(thetaRad)
         if currMode == '1':
@@ -181,18 +181,18 @@ def servoPath(path, seq):
                 time.sleep(recSleep)
             i += 1
         backFlag = True
+    '''
     else:
+        print('fixing')
         s = 0
         if j < 20:
-            s = 2000 - 20 + j
+            s = len(phi) - 20 + j
         else:
             s = j - 20
-        print("align")
-        (phiRad, thetaRad) = convertValues(phi[j], theta[j])
-        servoPhi.ChangeDutyCycle(phiRad)
-        servoTheta.ChangeDutyCycle(thetaRad)
-        time.sleep(1)
-        '''
+        (phiRad, thetaRad) = convertValues(phi[s], theta[s])
+        #servoPhi.ChangeDutyCycle(phiRad)
+        #servoTheta.ChangeDutyCycle(thetaRad)
+        #time.sleep(1)
 
 def convertValues(phi, theta):
     phi = translate((phi / 18) + 2.5, 2.5, 12.5, 2.2, 11.7)
