@@ -13,7 +13,7 @@ def main():
     id = os.getenv('id')
     diverg = 56
     wT = 300
-    wR = 97
+    wR = 300
     pts = 1000
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)

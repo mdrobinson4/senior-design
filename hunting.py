@@ -105,8 +105,9 @@ def listenForSyn(slotEndTime, ackWaitTime):
         try:
             data = x.decode()
             if data == 'hello':
-                for i in range(1,5):
+                for i in range(10):
                     ser.write(('ack').encode())
+                    time.sleep(0.01)
                 exitThread = True
                 print('Aligned!')
                 return
@@ -130,7 +131,7 @@ def servoPath(path, seq):
     servoTheta.start(thetaRad)
     while not exitThread:
         j = i % len(phi)
-        if abs(phi[j] - phi[j-1]) >= 170:
+        if False:
             backFlag = True
             if phi[j-1] > 90:
                 angle = 180
