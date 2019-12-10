@@ -13,16 +13,24 @@ def main():
     id = os.getenv('id')
     diverg = 56
     wT = 300
-    wR = 300
+    wR = 97
     pts = 1000
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)
     slotTime = calcSlotTime(wR, wT, n)
     (x, y, z) = genCoords(n, pts, id)
     (phi, theta, tranWait, recWait) = genPath(x, y, z, wT, wR, pts)
-    path = {"phi": phi, "theta": theta, "tranWait": tranWait, "recWait": recWait, "slotTime": slotTime, "ackWait": ackWait, "wT": wT, "wR": wR}
+    path = {
+            "phi": phi, 
+            "theta": theta, 
+            "tranWait": tranWait, 
+            "recWait": recWait, 
+            "slotTime": slotTime, 
+            "ackWait": ackWait, 
+            "wT": wT, 
+            "wR": wR
+    }
     pickle.dump(path, open("path.p", "wb"))
-    plot(x, y, z, phi, theta)
 
 # generate the x, y, z coordinates
 def genCoords(n, pts, id):
@@ -30,10 +38,7 @@ def genCoords(n, pts, id):
     y = []
     z = []
     lin = []
-    if id == '0':
-        lin = linspace(-math.pi, 0, num=pts)
-    else:
-        lin = linspace(0.00000001, math.pi, num=pts)
+    lin = linspace(-math.pi, math.pi, num=pts)
     for i in range(0,pts-1):
         r = math.cos(lin[i]/2)
         x.append(r*math.sin(n*lin[i]))

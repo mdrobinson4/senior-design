@@ -56,7 +56,7 @@ def handshake(path, seq):
     i = 0
     while i < len(seq) and not exitThread:
         mode = seq[0]
-        #print('current mode: {}'.format(mode))
+        print('current mode: {}'.format(mode))
         slotEndTime = slotTime + time.time()
         currMode = mode
         if currMode == '1':
@@ -107,7 +107,7 @@ def listenForSyn(slotEndTime, ackWaitTime):
             if data == 'hello':
                 for i in range(10):
                     ser.write(('ack').encode())
-                    time.sleep(0.01)
+                    #time.sleep(0.01)
                 exitThread = True
                 print('Aligned!')
                 return
@@ -116,7 +116,6 @@ def listenForSyn(slotEndTime, ackWaitTime):
 
 
 def checkBackFlag(slotEndTime):
-    return
     while backFlag == True and time.time() < slotEndTime:
         pass
     ser.reset_input_buffer()
@@ -131,7 +130,9 @@ def servoPath(path, seq):
     servoTheta.start(thetaRad)
     while not exitThread:
         j = i % len(phi)
-        if False:
+        (phiRad, thetaRad) = convertValues(phi[j], theta[j])
+       
+        if abs(phi[j] - phi[j-1]) >= 170:
             backFlag = True
             if phi[j-1] > 90:
                 angle = 180
@@ -141,7 +142,7 @@ def servoPath(path, seq):
                 direction = 1
 
             for backi in range(100):
-                if exitThread:
+                if exitThread == True:
                     break
                 (phiRad, thetaRad) = convertValues(angle, theta[j-1])
                 servoPhi.ChangeDutyCycle(phiRad)
@@ -153,8 +154,18 @@ def servoPath(path, seq):
                     time.sleep(180/path["wR"]/100)
             transSleep = 0
             recSleep = 0
-            #tranSleep = 0.5
-            #recSleep = 0.5
+        
+        
+        else:
+            backFlag = True
+            servoPhi.ChangeDutyCycle(phiRad)
+            servoTheta.ChangeDutyCycle(thetaRad)
+        if currMode == '1':
+            time.sleep(tranWait[j])
+        else:
+            time.sleep(tranWait[j])
+        i += 1
+        '''
         else:
             backFlag = False
             tranSleep = tranWait[j]
@@ -181,6 +192,7 @@ def servoPath(path, seq):
         servoPhi.ChangeDutyCycle(phiRad)
         servoTheta.ChangeDutyCycle(thetaRad)
         time.sleep(1)
+        '''
 
 def convertValues(phi, theta):
     phi = translate((phi / 18) + 2.5, 2.5, 12.5, 2.2, 11.7)
