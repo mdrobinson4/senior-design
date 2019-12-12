@@ -38,18 +38,25 @@ backFlag = True
 
 
 def main():
-    seq = generateSeq(id)
-    print('mode sequence: {}'.format(seq))
-    path = pickle.load(open("path.p", "rb"))
-    servoThread = threading.Thread(target=servoPath, args=(path, seq))
-    handshakeThread = threading.Thread(target=handshake, args=(path, seq))
-    handshakeThread.start()
-    servoThread.start()
-    servoThread.join()
-    handshakeThread.join()
+    try:
+        seq = generateSeq(id)
+        print('mode sequence: {}'.format(seq))
+        path = pickle.load(open("path.p", "rb"))
+        servoThread = threading.Thread(target=servoPath, args=(path, seq))
+        handshakeThread = threading.Thread(target=handshake, args=(path, seq))
+        handshakeThread.start()
+        servoThread.start()
+        servoThread.join()
+        handshakeThread.join()
+    except KeyboardInterrupt:
+        ser.close()
+        raise
 
 def handshake(path, seq):
     global currMode
+    print(ser.in_waiting)
+    ser.reset_input_buffer() # reset input buffer
+    ser.reset_output_buffer() # reset input buffer
     ackWaitTime = 2*path['ackWait']
     slotTime = path['slotTime']
     #for mode in seq
@@ -88,9 +95,9 @@ def listenForAck(ackWaitTime):
             if data == 'ack':
                 exitThread = True
                 print('Aligned!')
-            return
+                return
         except:
-            pass
+            print(x)
 
 def listenForSyn(slotEndTime, ackWaitTime):
     global exitThread
@@ -106,9 +113,9 @@ def listenForSyn(slotEndTime, ackWaitTime):
         try:
             data = x.decode()
             if data == 'hello':
-                for i in range(10):
+                for i in range(100):
                     ser.write(('ack').encode())
-                    #time.sleep(0.01)
+                    time.sleep(0.001)
                 exitThread = True
                 print('Aligned!')
                 return
@@ -117,7 +124,7 @@ def listenForSyn(slotEndTime, ackWaitTime):
 
 
 def checkBackFlag(slotEndTime):
-    return
+    #return
     while backFlag == True and time.time() < slotEndTime:
         ser.reset_input_buffer()
         ser.reset_output_buffer()
