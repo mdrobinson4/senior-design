@@ -6,3 +6,6 @@
 
 # compiled python3 bytecode
 __pycache__/
+
+#path file
+path.p
