@@ -31,6 +31,7 @@ def main():
             "wR": wR
     }
     pickle.dump(path, open("path.p", "wb"))
+    plot(x, y, z, phi, theta)
 
 # generate the x, y, z coordinates
 def genCoords(n, pts, id):
@@ -57,14 +58,25 @@ def genPath(x, y, z, wT, wR, pts):
     recWait = []
     for i in range(0,pts-1):
         radius = (x[i]**2 + y[i]**2 + z[i]**2)
-        theta.append(math.degrees(math.acos(z[i] / radius)))
-        phi.append(math.degrees(math.atan(y[i] / x[i])) + 90)
+        thetaVal = math.degrees(math.acos(z[i] / radius))
+        phiVal = math.degrees(math.atan(y[i] / x[i]))
+
+        if x[i] < 0 and y[i] < 0:
+            phiVal = 180 - phiVal
+        elif x[i] > 0 and y[i] < 0:
+            phiVal = phiVal * -1
+        elif x[i] < 0 and y[i] > 0:
+            phiVal = phiVal + 180
+
+        theta.append(thetaVal)
+        phi.append(phiVal)
         if i > 0:
-            u = array([x[i],y[i],0])
-            v = ([x[i-1],y[i-1],0])
+            (xVal, yVal, zVal) = polar2CoordP(phiVal, thetaVal)
+            (xPrev, yPrev, zPrev) = polar2CoordP(phi[i-1], theta[i-1])
+            u = array([xVal,yVal,zVal])
+            v = ([xPrev,yPrev,zPrev])
             c = dot(u,v)/norm(u)/norm(v) # -> cosine of the angle
             angle = math.degrees(math.acos(clip(c, -1, 1))) # if you really want the angle
-            #angle = phi[i] - phi[i-1]
             tranWait.append(angle / wT)
             recWait.append(angle / wR)
         else:
@@ -73,6 +85,16 @@ def genPath(x, y, z, wT, wR, pts):
     return (phi, theta, tranWait, recWait)
 
 # convert polar to cartesian
+def polar2CoordP(phi, theta):
+    phiRad = math.radians(phi)
+    thetaRad = math.radians(theta)
+    
+    x = math.sin(thetaRad) * math.cos(phiRad)
+    y = math.sin(thetaRad) * math.sin(phiRad)
+    z = math.cos(thetaRad)
+    return (x, y, z)
+
+
 def polar2Coord(phi, theta):
     x = []
     y = []
