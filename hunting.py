@@ -155,7 +155,7 @@ def servoPath(path, seq):
         if currMode == '1':
             time.sleep(tranWait[j])
         else:
-            time.sleep(tranWait[j])
+            time.sleep(recWait[j])
         i += 1
         
 def convertValues(phi, theta):
