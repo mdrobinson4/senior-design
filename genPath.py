@@ -31,7 +31,7 @@ def main():
             "wR": wR
     }
     pickle.dump(path, open("path.p", "wb"))
-    plot(x, y, z, phi, theta)
+    #plot(x, y, z, phi, theta)
 
 # generate the x, y, z coordinates
 def genCoords(n, pts, id):
