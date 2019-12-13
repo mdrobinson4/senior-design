@@ -24,9 +24,6 @@ ser = serial.Serial(
     timeout=0
 )
 
-ser.reset_input_buffer() # reset input buffer
-ser.reset_output_buffer() # reset input buffer
-
 load_dotenv()
 id = os.getenv('id')
 
@@ -39,6 +36,7 @@ backFlag = True
 
 def main():
     try:
+        start = time.time()
         seq = generateSeq(id)
         print('mode sequence: {}'.format(seq))
         path = pickle.load(open("path.p", "rb"))
@@ -48,35 +46,41 @@ def main():
         servoThread.start()
         servoThread.join()
         handshakeThread.join()
+        end = time.time()
+        print(start,"\n",end,"\n",end-start)
     except KeyboardInterrupt:
         ser.close()
         raise
 
 def handshake(path, seq):
-    global currMode
-    print(ser.in_waiting)
-    ser.reset_input_buffer() # reset input buffer
-    ser.reset_output_buffer() # reset input buffer
-    ackWaitTime = 2*path['ackWait']
-    slotTime = path['slotTime']
-    #for mode in seq
-    i = 0
-    while i < len(seq) and not exitThread:
-        mode = seq[0]
-        print('current mode: {}'.format(mode))
-        slotEndTime = slotTime + time.time()
-        currMode = mode
-        if currMode == '1':
-            while time.time() < slotEndTime and not exitThread:
-                checkBackFlag(slotEndTime)  # see if we are traversing the back
-                if slotEndTime - time.time() >= ackWaitTime:
-                    sendSyn()
-                    listenForAck(ackWaitTime)
-                elif slotEndTime - time.time() < ackWaitTime:
-                    time.sleep(slotEndTime - time.time())
-        elif currMode == '0':
-            listenForSyn(slotEndTime, ackWaitTime)
-        i += 1
+    try:
+        global currMode
+        print(ser.in_waiting)
+        ser.read(ser.in_waiting)
+        ser.reset_input_buffer() # reset input buffer
+        ser.reset_output_buffer() # reset input buffer
+        ackWaitTime = 2*path['ackWait']
+        slotTime = path['slotTime']
+        #for mode in seq
+        i = 0
+        while i < len(seq) and not exitThread:
+            mode = seq[0]
+            print('current mode: {}'.format(mode))
+            slotEndTime = slotTime + time.time()
+            currMode = mode
+            if currMode == '1':
+                while time.time() < slotEndTime and not exitThread:
+                    checkBackFlag(slotEndTime)  # see if we are traversing the back
+                    if slotEndTime - time.time() >= ackWaitTime:
+                        sendSyn()
+                        listenForAck(ackWaitTime)
+                    elif slotEndTime - time.time() < ackWaitTime and (slotEndTime - time.time()) > 0:
+                        time.sleep(slotEndTime - time.time())
+            elif currMode == '0':
+                listenForSyn(slotEndTime, ackWaitTime)
+            i += 1
+    except KeyboardInterrupt:
+        ser.close()
 
 def sendSyn():
     ser.reset_input_buffer()
@@ -98,6 +102,8 @@ def listenForAck(ackWaitTime):
                 return
         except:
             print(x)
+            ser.reset_output_buffer()
+
 
 def listenForSyn(slotEndTime, ackWaitTime):
     global exitThread
@@ -115,7 +121,9 @@ def listenForSyn(slotEndTime, ackWaitTime):
             if data == 'hello':
                 for i in range(100):
                     ser.write(('ack').encode())
-                    time.sleep(0.001)
+                    #if listenForSynAck(ackWaitTime) == True:
+                        #break
+                    #time.sleep(0.001)
                 exitThread = True
                 print('Aligned!')
                 return
@@ -191,18 +199,19 @@ def servoPath(path, seq):
             i += 1
         backFlag = True
     '''
+    '''
     else:
         print('fixing')
         s = 0
-        if j < 20:
-            s = len(phi) - 20 + j
+        if j < 40:
+            s = len(phi) - 40 + j
         else:
-            s = j - 20
+            s = j - 40
         (phiRad, thetaRad) = convertValues(phi[s], theta[s])
-        #servoPhi.ChangeDutyCycle(phiRad)
-        #servoTheta.ChangeDutyCycle(thetaRad)
-        #time.sleep(1)
-
+        servoPhi.ChangeDutyCycle(phiRad)
+        servoTheta.ChangeDutyCycle(thetaRad)
+        time.sleep(1)
+    '''
 def convertValues(phi, theta):
     phi = translate((phi / 18) + 2.5, 2.5, 12.5, 2.2, 11.7)
     theta = translate((theta / 18) + 2.5, 2.5, 12.5, 2.2, 11.7)

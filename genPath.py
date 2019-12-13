@@ -12,8 +12,8 @@ def main():
     load_dotenv()
     id = os.getenv('id')
     diverg = 56
-    wT = 300
-    wR = 97
+    wT = 290
+    wR = 70
     pts = 1000
     ackWait = 0.00842599630355835
     (coverage, n) = calcCoverage(diverg)
